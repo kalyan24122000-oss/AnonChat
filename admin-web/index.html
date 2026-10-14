@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AnonChat — Security & License Admin Panel</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- 1. Administrator Login View -->
+  <div id="login-view">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="shield-icon">🛡️</div>
+        <h2>AnonChat Admin</h2>
+        <p>Privileged Identity & Licensing Console</p>
+      </div>
+
+      <div id="login-error" style="display:none; background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.4); color:#f87171; padding:10px 14px; border-radius:6px; font-size:0.875rem; margin-bottom:18px;"></div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-id">Admin ID (Starts with ADM)</label>
+          <input type="text" id="login-id" class="form-control mono" placeholder="ADM-XXXX-XXXX" required autofocus autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Master Password</label>
+          <input type="password" id="login-password" class="form-control" placeholder="••••••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" id="login-btn" class="btn btn-primary" style="width:100%; margin-top:8px;">Sign In to Dashboard</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Authenticated Dashboard Application View -->
+  <div id="app-view" style="display:none;">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span style="font-size:24px;">🛡️</span>
+        <div>
+          <h1>AnonChat</h1>
+          <span style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">Admin Console</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-item active" data-target="sec-overview">
+          <span>📊</span>
+          <span>Overview</span>
+        </div>
+        <div class="nav-item" data-target="sec-users">
+          <span>👥</span>
+          <span>User Accounts</span>
+        </div>
+        <div class="nav-item" data-target="sec-licenses">
+          <span>🔑</span>
+          <span>Licenses</span>
+        </div>
+        <div class="nav-item" data-target="sec-plans">
+          <span>⚙️</span>
+          <span>Configurable Plans</span>
+        </div>
+        <div class="nav-item" data-target="sec-audit">
+          <span>📜</span>
+          <span>Audit Logs</span>
+        </div>
+        <div class="nav-item" data-target="sec-inspector">
+          <span>🗄️</span>
+          <span>Database Inspector</span>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="admin-profile-pill">
+          <div>
+            <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Signed In As</div>
+            <div id="admin-display-id" class="admin-id-label mono">ADM-MASTER-01</div>
+          </div>
+          <button id="logout-btn" class="btn btn-danger btn-sm" title="Sign Out">Logout</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+      <header class="top-header">
+        <h2 id="page-title">Overview</h2>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <a href="/" target="_blank" class="btn btn-secondary btn-sm">Landing Page ↗</a>
+        </div>
+      </header>
+
+      <main class="content-body">
+        
+        <!-- SECTION: Overview -->
+        <section id="sec-overview" class="view-section">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Total Users</div>
+              <div id="stat-total-users" class="stat-value mono">0</div>
+              <div class="stat-sub">Registered with zero identity</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Active 7-Day Trials</div>
+              <div id="stat-active-trials" class="stat-value mono" style="color:var(--accent-amber);">0</div>
+              <div class="stat-sub">Server-calculated active windows</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Premium Subscribers</div>
+              <div id="stat-active-premiums" class="stat-value mono" style="color:var(--accent-green);">0</div>
+              <div class="stat-sub">Valid redeemed licenses</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Encrypted Messages Relayed</div>
+              <div id="stat-total-messages" class="stat-value mono">0</div>
+              <div class="stat-sub">Zero plaintext stored</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Unused License Keys</div>
+              <div id="stat-unused-licenses" class="stat-value mono" style="color:var(--accent-blue);">0</div>
+              <div class="stat-sub">Ready for distribution</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Recent Security & Admin Activities</h3>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Action</th>
+                    <th>Actor ID</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-audits-tbody">
+                  <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION: Users Management -->
+        <section id="sec-users" class="view-section" style="display:none;">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>All Registered Accounts</h3>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <input type="text" id="user-search-input" class="form-control mono" placeholder="Search by User ID..." style="width:220px; padding:6px 12px; font-size:0.85rem;">
+                <select id="user-status-filter" class="form-control" style="width:140px; padding:6px 10px; font-size:0.85rem;">
+                  <option value="">All Statuses</option>
+                  <option value="active">Active</option>
+                  <option value="suspended">Suspended</option>
+                </select>
+                <button id="user-search-btn" class="btn btn-primary btn-sm">Filter</button>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>User ID</th>
+                    <th>Display Name</th>
+                    <th>Role</th>
+                    <th>Account Status</th>
+                    <th>Subscription</th>
+                    <th>Access Expiry</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="users-tbody">
+                  <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+            <div style="padding:14px 24px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+              <span id="users-pagination-info" style="font-size:0.85rem; color:var(--text-secondary);"></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION: Licenses Management -->
+        <section id="sec-licenses" class="view-section" style="display:none;">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>License Key Inventory</h3>
+              <button id="open-gen-license-btn" class="btn btn-primary btn-sm">+ Generate License Key</button>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>License Key</th>
+                    <th>Plan & Duration</th>
+                    <th>Status</th>
+                    <th>Redeemed By</th>
+                    <th>Timestamp</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="licenses-tbody">
+                  <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION: Configurable Plans -->
+        <section id="sec-plans" class="view-section" style="display:none;">
+          <div style="margin-bottom:16px;">
+            <p style="color:var(--text-secondary); font-size:0.9rem;">
+              AnonChat provides 4 configurable plans. You can adjust the plan names, durations in days, descriptions, and feature lists.
+            </p>
+          </div>
+          <div id="plans-grid-container" class="plans-grid">
+            <!-- Dynamic plan cards -->
+          </div>
+        </section>
+
+        <!-- SECTION: Audit Logs -->
+        <section id="sec-audit" class="view-section" style="display:none;">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Security & Administrator Audit Trail</h3>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Log ID</th>
+                    <th>Action</th>
+                    <th>Actor ID</th>
+                    <th>Details</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-tbody">
+                  <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION: Database Inspector -->
+        <section id="sec-inspector" class="view-section" style="display:none;">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Authorized Database Inspector</h3>
+              <span class="badge badge-admin">Zero Knowledge Protected</span>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Database Table</th>
+                    <th>Record Count</th>
+                    <th>Security Classification</th>
+                  </tr>
+                </thead>
+                <tbody id="inspector-tbody">
+                  <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: Generate License -->
+  <div id="modal-gen-license" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4>Generate Premium License Key</h4>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-gen-license')">✕</button>
+      </div>
+      <form id="form-gen-license">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="gen-plan-select">Assign to Premium Plan</label>
+            <select id="gen-plan-select" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label for="gen-notes">Internal Note (Optional)</label>
+            <input type="text" id="gen-notes" class="form-control" placeholder="E.g., Customer contact reference">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modal-gen-license')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Generate Key</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Edit Plan -->
+  <div id="modal-edit-plan" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4>Configure Premium Plan</h4>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-edit-plan')">✕</button>
+      </div>
+      <form id="form-edit-plan">
+        <div class="modal-body">
+          <input type="hidden" id="edit-plan-id">
+          <div class="form-group">
+            <label for="edit-plan-name">Plan Name</label>
+            <input type="text" id="edit-plan-name" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-plan-duration">Duration (Days)</label>
+            <input type="number" id="edit-plan-duration" class="form-control" min="1" max="3650" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-plan-desc">Description</label>
+            <input type="text" id="edit-plan-desc" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="edit-plan-features">Features (One per line)</label>
+            <textarea id="edit-plan-features" class="form-control" rows="4"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modal-edit-plan')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Password Reset Result -->
+  <div id="modal-reset-result" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4>Temporary Credentials Generated</h4>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-reset-result')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:14px;">
+          A secure temporary password has been set for account <strong id="reset-result-user" class="mono" style="color:#fff;"></strong>. Provide this to the user via a secure one-time channel.
+        </p>
+        <div class="form-group">
+          <label>Temporary Password</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="reset-result-pwd" class="form-control mono" readonly style="color:var(--accent-green); font-weight:700;">
+            <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('reset-result-pwd').value).then(() => showToast('Copied temporary password!'))">Copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary btn-sm" onclick="closeModal('modal-reset-result')">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

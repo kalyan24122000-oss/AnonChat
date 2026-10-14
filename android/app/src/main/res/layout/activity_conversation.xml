@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_subtle">
+
+    <!-- Conversation Header Toolbar -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar_chat"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/primary"
+        app:navigationIcon="?attr/homeAsUpIndicator"
+        app:navigationIconTint="@color/background_white"
+        app:titleTextColor="@color/background_white"
+        app:subtitleTextColor="#C8E6C9" />
+
+    <!-- Screen Shield Security Notice -->
+    <LinearLayout
+        android:id="@+id/banner_security_disclosure"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#E0F2FE"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_lock"
+            app:tint="#0284C7"
+            android:contentDescription="Shield" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="Protected by FLAG_SECURE &amp; Curve25519 E2EE. Tap for disclosures."
+            android:textSize="11sp"
+            android:textColor="#0369A1" />
+    </LinearLayout>
+
+    <!-- Message History List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_messages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp" />
+
+    <!-- Expired Subscription Block Banner (Visible when trial expired) -->
+    <LinearLayout
+        android:id="@+id/container_trial_expired"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/background_white"
+        android:padding="16dp"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/trial_expired_notice"
+            android:textStyle="bold"
+            android:textColor="@color/danger"
+            android:gravity="center"
+            android:textSize="14sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_activate_from_chat"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/activate_license_btn"
+            android:textAllCaps="false"
+            app:backgroundTint="@color/primary"
+            app:cornerRadius="22dp" />
+    </LinearLayout>
+
+    <!-- Chat Message Input Bar (Visible when subscription active) -->
+    <LinearLayout
+        android:id="@+id/container_input_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:background="@color/background_subtle"
+        android:gravity="center_vertical">
+
+        <EditText
+            android:id="@+id/et_message_input"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="46dp"
+            android:maxLines="4"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:background="@drawable/bg_input_rounded"
+            android:hint="@string/type_message_hint"
+            android:textSize="15sp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_muted" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btn_send_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_send"
+            app:fabCustomSize="46dp"
+            app:tint="@color/background_white"
+            app:backgroundTint="@color/primary"
+            android:contentDescription="@string/send" />
+    </LinearLayout>
+
+</LinearLayout>

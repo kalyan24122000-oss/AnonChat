@@ -1,0 +1,24 @@
+{
+  "name": "anonchat-server",
+  "version": "1.0.0",
+  "description": "AnonChat Privacy-Focused ID-Based Messaging Server & Admin Panel",
+  "main": "backend/src/server.js",
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "build": "cd backend && npm install",
+    "test": "cd backend && npm test"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "socket.io": "^4.8.1"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

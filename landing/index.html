@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AnonChat — Privacy-Focused ID-Based Messaging</title>
+  <meta name="description" content="Secure, native messaging platform operating purely on cryptographic IDs. No phone numbers, no emails, complete end-to-end encryption.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header>
+    <div class="container nav-bar">
+      <a href="/" class="brand">
+        <div class="brand-icon">🛡️</div>
+        <span>AnonChat</span>
+      </a>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <a href="/admin" class="btn btn-outline" style="padding:8px 16px; font-size:0.875rem;">Admin Portal ↗</a>
+        <button class="btn btn-primary" onclick="openContactModal()" style="padding:8px 16px; font-size:0.875rem;">Get License</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <div class="badge-hero">
+          <span>🔒</span> Pure Cryptographic Anonymity
+        </div>
+        <h1>Communicate Freely.<br><span>Zero Real-World Identity.</span></h1>
+        <p>
+          AnonChat completely severs messaging from personal phone numbers, emails, and address books. 
+          Communicate securely using unique cryptographic IDs and end-to-end encryption.
+        </p>
+        <div class="hero-cta">
+          <button class="btn btn-primary" onclick="openContactModal()">Contact Owner for Licenses</button>
+          <a href="#how-it-works" class="btn btn-outline">Explore Architecture ↓</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Core Security Pillars -->
+    <section id="how-it-works" class="pillars">
+      <div class="container">
+        <div class="section-title">
+          <h2>Engineered for Uncompromising Privacy</h2>
+          <p>Every layer designed to prevent interception, tracking, and surveillance.</p>
+        </div>
+
+        <div class="grid-3">
+          <div class="pillar-card">
+            <div class="pillar-icon">🆔</div>
+            <h3>Pure ID-Based Access</h3>
+            <p>
+              No phone numbers. No emails. Accounts are identified strictly by randomly generated <code style="font-family:var(--mono); color:var(--accent-light);">USR-XXXX-XXXX</code> IDs. Zero contacts-upload metadata.
+            </p>
+          </div>
+
+          <div class="pillar-card">
+            <div class="pillar-icon">🔐</div>
+            <h3>Client-Side E2EE</h3>
+            <p>
+              Direct Elliptic Curve Diffie-Hellman key exchange (Curve25519) combined with AES-256-GCM authenticated encryption. Messages exist as ciphertext only on the server.
+            </p>
+          </div>
+
+          <div class="pillar-card">
+            <div class="pillar-icon">📵</div>
+            <h3>FLAG_SECURE Protection</h3>
+            <p>
+              Native Android window protection actively blocks screenshots, screen recorders, and obscures conversation views in the OS recent applications switcher.
+            </p>
+          </div>
+
+          <div class="pillar-card">
+            <div class="pillar-icon">⏳</div>
+            <h3>7-Day Free Trial</h3>
+            <p>
+              Every newly generated account receives an automatic 7-day unrestricted trial calculated securely by the backend clock, tamper-proof against device adjustments.
+            </p>
+          </div>
+
+          <div class="pillar-card">
+            <div class="pillar-icon">🔑</div>
+            <h3>Single-Use Recovery Key</h3>
+            <p>
+              Account credentials can be safely restored using a cryptographically generated high-entropy Recovery Code, securely salted and hashed on the server.
+            </p>
+          </div>
+
+          <div class="pillar-card">
+            <div class="pillar-icon">🛡️</div>
+            <h3>Owner-Managed Licensing</h3>
+            <p>
+              Zero credit-card gateways or app store tracking. Premium access is provisioned via cryptographically signed license keys issued directly by the platform owner.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Configurable Plans -->
+    <section class="plans-section">
+      <div class="container">
+        <div class="section-title">
+          <h2>Configurable Premium Plans</h2>
+          <p>Flexible privacy tiers activated seamlessly via license keys in settings.</p>
+        </div>
+
+        <div class="plans-grid">
+          <div class="plan-box">
+            <div class="plan-header">
+              <h3>Starter Anonymous</h3>
+            </div>
+            <div class="plan-days">30 Days</div>
+            <p class="plan-desc">Standard anonymous private messaging channel.</p>
+            <ul class="plan-features">
+              <li><span>✓</span> E2EE Messaging</li>
+              <li><span>✓</span> FLAG_SECURE Shield</li>
+              <li><span>✓</span> Zero Identity Footprint</li>
+              <li><span>✓</span> Delivery Status Receipts</li>
+            </ul>
+            <button class="btn btn-outline" style="width:100%;" onclick="openContactModal('Starter Anonymous')">Request Key</button>
+          </div>
+
+          <div class="plan-box featured">
+            <div class="plan-header">
+              <h3>Pro Confidential</h3>
+            </div>
+            <div class="plan-days">90 Days</div>
+            <p class="plan-desc">Extended confidential privacy protection for 3 months.</p>
+            <ul class="plan-features">
+              <li><span>✓</span> Everything in Starter</li>
+              <li><span>✓</span> 90-Day Extended Access</li>
+              <li><span>✓</span> Priority Message Relays</li>
+              <li><span>✓</span> Priority Support Access</li>
+            </ul>
+            <button class="btn btn-primary" style="width:100%;" onclick="openContactModal('Pro Confidential')">Request Key</button>
+          </div>
+
+          <div class="plan-box">
+            <div class="plan-header">
+              <h3>Elite Sovereign</h3>
+            </div>
+            <div class="plan-days">180 Days</div>
+            <p class="plan-desc">Advanced sovereign communications for critical teams.</p>
+            <ul class="plan-features">
+              <li><span>✓</span> Everything in Pro Plan</li>
+              <li><span>✓</span> 180-Day Key Management</li>
+              <li><span>✓</span> Multi-Device Key Sync Support</li>
+              <li><span>✓</span> High-Reliability Node Routing</li>
+            </ul>
+            <button class="btn btn-outline" style="width:100%;" onclick="openContactModal('Elite Sovereign')">Request Key</button>
+          </div>
+
+          <div class="plan-box">
+            <div class="plan-header">
+              <h3>Annual Fortress</h3>
+            </div>
+            <div class="plan-days">365 Days</div>
+            <p class="plan-desc">Full 1-year continuous high-privacy fortress channel.</p>
+            <ul class="plan-features">
+              <li><span>✓</span> 365-Day Unlimited Access</li>
+              <li><span>✓</span> Highest Relay Priority</li>
+              <li><span>✓</span> Direct Owner VIP Channel</li>
+              <li><span>✓</span> All Future Privacy Upgrades</li>
+            </ul>
+            <button class="btn btn-outline" style="width:100%;" onclick="openContactModal('Annual Fortress')">Request Key</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Interactive Contact Owner Modal -->
+  <div id="contact-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <h3 style="font-size:1.3rem;">Contact the Platform Owner</h3>
+        <button style="background:none; border:none; color:var(--text-dim); font-size:1.5rem; cursor:pointer;" onclick="closeContactModal()">✕</button>
+      </div>
+      <p style="font-size:0.9rem; color:var(--text-dim); margin-bottom:18px;">
+        AnonChat does not use automated tracking payment processors. To obtain or renew a premium license key:
+      </p>
+
+      <div style="background:#0f172a; border:1px solid var(--border-card); border-radius:8px; padding:16px; margin-bottom:18px;">
+        <div style="font-size:0.8rem; color:var(--accent-light); font-weight:600; text-transform:uppercase; margin-bottom:4px;">Direct Contact Channel</div>
+        <div style="font-size:1rem; font-weight:700; color:#fff;">owner@anonchat.internal</div>
+        <div style="font-size:0.85rem; color:var(--text-dim); margin-top:4px;">Or message Admin ID: <strong style="font-family:var(--mono); color:#fff;">ADM-MASTER-01</strong></div>
+      </div>
+
+      <div style="font-size:0.85rem; color:var(--text-dim); margin-bottom:20px;">
+        Once received, enter your license key (<code style="font-family:var(--mono); color:var(--accent-light);">ANON-XXXX-XXXX-XXXX</code>) in the Android app under <strong>Settings → Activate License</strong>.
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;" onclick="closeContactModal()">Understood</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <p>© 2026 AnonChat Platform. Privacy-first, zero-knowledge ID messaging architecture.</p>
+    </div>
+  </footer>
+
+  <script>
+    function openContactModal(planName) {
+      document.getElementById('contact-modal').classList.add('active');
+    }
+    function closeContactModal() {
+      document.getElementById('contact-modal').classList.remove('active');
+    }
+  </script>
+</body>
+</html>

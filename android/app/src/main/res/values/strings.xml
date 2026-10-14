@@ -1,0 +1,53 @@
+<resources>
+    <string name="app_name">AnonChat</string>
+    <string name="tagline">Privacy-First ID-Based Messaging</string>
+
+    <!-- Auth -->
+    <string name="login_title">Sign In</string>
+    <string name="user_id_hint">User ID (e.g. USR-XXXX-XXXX)</string>
+    <string name="password_hint">Password</string>
+    <string name="login_action">Sign In</string>
+    <string name="register_prompt">Don\'t have an account? Generate Anonymous ID</string>
+    <string name="register_title">Create Anonymous Account</string>
+    <string name="display_name_hint">Display Name (Optional alias)</string>
+    <string name="register_action">Generate ID &amp; Register</string>
+    <string name="forgot_password">Forgot Password? Account Recovery</string>
+    <string name="recovery_title">Account Recovery</string>
+    <string name="recovery_code_hint">Recovery Code (RC-XXXX-XXXX-XXXX)</string>
+    <string name="new_password_hint">New Password</string>
+    <string name="recovery_action">Restore Account</string>
+    <string name="recovery_warning">IMPORTANT: Write down or copy your Recovery Code. If lost, your account and identity cannot be restored.</string>
+
+    <!-- Main & Chat -->
+    <string name="search_hint">Search user by ID (USR-...)</string>
+    <string name="start_new_chat">New Conversation</string>
+    <string name="empty_chats_title">No Conversations Yet</string>
+    <string name="empty_chats_sub">Tap the button below to search an anonymous User ID and start communicating securely.</string>
+    <string name="type_message_hint">Encrypted message...</string>
+    <string name="send">Send</string>
+    <string name="trial_remaining">%1$d days remaining in trial</string>
+    <string name="premium_active">%1$d days premium active</string>
+    <string name="trial_expired_notice">Trial Expired. Contact the Owner to Get Your License.</string>
+    <string name="activate_license_btn">Activate License</string>
+
+    <!-- Privacy & Security Disclosures -->
+    <string name="security_disclosure_title">Privacy &amp; Screen Shield</string>
+    <string name="security_disclosure_text">This screen is protected using FLAG_SECURE. Screenshots, screen captures, and OS recent task previews are blocked on this device.\n\nNotice: This technical control restricts internal software capture on Android, but cannot prevent optical recording from external cameras or physical observation.</string>
+    <string name="e2ee_notice">Messages are end-to-end encrypted on device using Curve25519 &amp; AES-256-GCM. Plaintext is never accessible to servers or intermediaries.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="license_settings">Subscription &amp; License</string>
+    <string name="enter_license_hint">Enter License Key (ANON-XXXX-...)</string>
+    <string name="activate_key_action">Redeem Key</string>
+    <string name="blocked_users">Blocked Users</string>
+    <string name="logout_action">Sign Out</string>
+    <string name="delete_account_action">Delete Account Permanently</string>
+    <string name="delete_account_confirm">Are you sure? This will permanently anonymize your user record and delete active encryption keys.</string>
+
+    <!-- Actions -->
+    <string name="block_user">Block User</string>
+    <string name="unblock_user">Unblock User</string>
+    <string name="report_user">Report User</string>
+    <string name="copied">Copied to clipboard</string>
+</resources>

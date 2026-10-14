@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: anonchat-server
+    runtime: node
+    plan: free
+    buildCommand: npm install && cd backend && npm install
+    startCommand: node backend/src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TRIAL_DURATION_DAYS
+        value: "7"
+      - key: ADMIN_INITIAL_ID
+        value: ADM-MASTER-01
+      - key: ADMIN_INITIAL_PASSWORD
+        value: AnonAdminSecure2026!#
