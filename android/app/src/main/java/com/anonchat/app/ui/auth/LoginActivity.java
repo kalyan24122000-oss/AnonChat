@@ -53,6 +53,9 @@ public class LoginActivity extends AppCompatActivity {
 
         TextView tvRegister = findViewById(R.id.tv_go_to_register);
         TextView tvRecovery = findViewById(R.id.tv_go_to_recovery);
+        TextView tvChangeServer = findViewById(R.id.tv_change_server);
+
+        updateServerLabel(tvChangeServer);
 
         btnLogin.setOnClickListener(v -> performLogin());
 
@@ -63,6 +66,49 @@ public class LoginActivity extends AppCompatActivity {
         tvRecovery.setOnClickListener(v -> {
             startActivity(new Intent(LoginActivity.this, RecoveryActivity.class));
         });
+
+        tvChangeServer.setOnClickListener(v -> showChangeServerDialog(tvChangeServer));
+    }
+
+    private void updateServerLabel(TextView tv) {
+        String url = prefHelper.getBaseUrl();
+        tv.setText("🌐 Server: " + url + " (Tap to Change)");
+    }
+
+    private void showChangeServerDialog(TextView tv) {
+        final android.widget.EditText input = new android.widget.EditText(this);
+        input.setText(prefHelper.getBaseUrl());
+        input.setHint("https://your-app.onrender.com/");
+        input.setSingleLine(true);
+        int padding = (int) (18 * getResources().getDisplayMetrics().density);
+        input.setPadding(padding, padding, padding, padding);
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Configure Server URL")
+            .setMessage("Enter the Render server URL or custom backend host:")
+            .setView(input)
+            .setPositiveButton("Save", (dialog, which) -> {
+                String newUrl = input.getText().toString().trim();
+                if (!newUrl.isEmpty()) {
+                    if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://")) {
+                        newUrl = "https://" + newUrl;
+                    }
+                    if (!newUrl.endsWith("/")) {
+                        newUrl += "/";
+                    }
+                    prefHelper.setBaseUrl(newUrl);
+                    ApiClient.reset();
+                    updateServerLabel(tv);
+                    Toast.makeText(LoginActivity.this, "Server URL updated!", Toast.LENGTH_SHORT).show();
+                }
+            })
+            .setNegativeButton("Reset Default", (dialog, which) -> {
+                prefHelper.setBaseUrl(com.anonchat.app.utils.Constants.DEFAULT_BASE_URL);
+                ApiClient.reset();
+                updateServerLabel(tv);
+                Toast.makeText(LoginActivity.this, "Reset to default endpoint", Toast.LENGTH_SHORT).show();
+            })
+            .show();
     }
 
     private void performLogin() {

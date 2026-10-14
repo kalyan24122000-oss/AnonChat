@@ -120,5 +120,16 @@
             android:textSize="13sp"
             android:textColor="@color/text_secondary" />
 
+        <!-- Change Server URL (Render / Cloud / Custom IP) -->
+        <TextView
+            android:id="@+id/tv_change_server"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:padding="6dp"
+            android:text="🌐 Server: Default (Tap to Change)"
+            android:textSize="12sp"
+            android:textColor="@color/primary_dark" />
+
     </LinearLayout>
 </ScrollView>
