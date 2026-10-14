@@ -46,7 +46,11 @@ public class PreferenceHelper {
     }
 
     public String getBaseUrl() {
-        return prefs.getString(Constants.PREF_BASE_URL, Constants.DEFAULT_BASE_URL);
+        String url = prefs.getString(Constants.PREF_BASE_URL, Constants.DEFAULT_BASE_URL);
+        if (url == null || url.contains("10.0.2.2") || url.contains("localhost")) {
+            return Constants.DEFAULT_BASE_URL;
+        }
+        return url;
     }
 
     public void setBaseUrl(String url) {

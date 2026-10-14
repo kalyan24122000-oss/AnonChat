@@ -266,7 +266,14 @@ function searchUserById(searchId, currentUserId) {
     LIMIT 10
   `).all(`${cleaned}%`, currentUserId);
 
-  return rows;
+  return rows.map((r) => ({
+    id: r.id,
+    displayName: r.display_name,
+    display_name: r.display_name,
+    publicKey: r.public_key,
+    public_key: r.public_key,
+    status: r.status
+  }));
 }
 
 /**

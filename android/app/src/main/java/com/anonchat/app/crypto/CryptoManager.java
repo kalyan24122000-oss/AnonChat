@@ -129,7 +129,7 @@ public class CryptoManager {
      */
     public String decryptMessage(String ciphertextBase64, String ivBase64, String authTagBase64, String senderPublicKeyBase64) throws Exception {
         if (ciphertextBase64 == null || ivBase64 == null || authTagBase64 == null || senderPublicKeyBase64 == null) {
-            return "[Decryption Error: Incomplete Payload]";
+            throw new IllegalArgumentException("Incomplete E2EE encryption payload");
         }
 
         PrivateKey myPrivateKey = loadPrivateKey();

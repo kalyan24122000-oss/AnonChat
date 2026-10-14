@@ -6,7 +6,7 @@ public class User {
     @SerializedName("id")
     private String id;
 
-    @SerializedName("display_name")
+    @SerializedName(value = "display_name", alternate = {"displayName"})
     private String displayName;
 
     @SerializedName("role")
@@ -15,22 +15,22 @@ public class User {
     @SerializedName("status")
     private String status;
 
-    @SerializedName("public_key")
+    @SerializedName(value = "public_key", alternate = {"publicKey"})
     private String publicKey;
 
-    @SerializedName("trial_started_at")
+    @SerializedName(value = "trial_started_at", alternate = {"trialStartedAt"})
     private long trialStartedAt;
 
-    @SerializedName("trial_expires_at")
+    @SerializedName(value = "trial_expires_at", alternate = {"trialExpiresAt"})
     private long trialExpiresAt;
 
-    @SerializedName("subscription_status")
+    @SerializedName(value = "subscription_status", alternate = {"subscriptionStatus"})
     private String subscriptionStatus;
 
-    @SerializedName("premium_expires_at")
+    @SerializedName(value = "premium_expires_at", alternate = {"premiumExpiresAt"})
     private Long premiumExpiresAt;
 
-    @SerializedName("created_at")
+    @SerializedName(value = "created_at", alternate = {"createdAt"})
     private long createdAt;
 
     public String getId() { return id; }

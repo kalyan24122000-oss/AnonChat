@@ -28,6 +28,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         this.currentUserId = currentUserId;
     }
 
+    public List<Message> getMessages() {
+        return messages;
+    }
+
     public void setMessages(List<Message> list) {
         messages.clear();
         if (list != null) {
@@ -37,6 +41,16 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     public void addMessage(Message message) {
+        if (message == null) return;
+        if (message.getId() != null) {
+            for (int i = 0; i < messages.size(); i++) {
+                if (message.getId().equals(messages.get(i).getId())) {
+                    messages.set(i, message);
+                    notifyItemChanged(i);
+                    return;
+                }
+            }
+        }
         messages.add(message);
         notifyItemInserted(messages.size() - 1);
     }

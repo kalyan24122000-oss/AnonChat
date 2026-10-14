@@ -6,37 +6,37 @@ public class Message {
     @SerializedName("id")
     private String id;
 
-    @SerializedName("conversation_id")
+    @SerializedName(value = "conversation_id", alternate = {"conversationId"})
     private String conversationId;
 
-    @SerializedName("sender_id")
+    @SerializedName(value = "sender_id", alternate = {"senderId"})
     private String senderId;
 
-    @SerializedName("recipient_id")
+    @SerializedName(value = "recipient_id", alternate = {"recipientId"})
     private String recipientId;
 
-    @SerializedName("encrypted_content")
+    @SerializedName(value = "encrypted_content", alternate = {"encryptedContent"})
     private String encryptedContent;
 
     @SerializedName("iv")
     private String iv;
 
-    @SerializedName("auth_tag")
+    @SerializedName(value = "auth_tag", alternate = {"authTag"})
     private String authTag;
 
-    @SerializedName("sender_ephemeral_key")
+    @SerializedName(value = "sender_ephemeral_key", alternate = {"senderEphemeralKey"})
     private String senderEphemeralKey;
 
     @SerializedName("status")
     private String status;
 
-    @SerializedName("delivered_at")
+    @SerializedName(value = "delivered_at", alternate = {"deliveredAt"})
     private Long deliveredAt;
 
-    @SerializedName("read_at")
+    @SerializedName(value = "read_at", alternate = {"readAt"})
     private Long readAt;
 
-    @SerializedName("created_at")
+    @SerializedName(value = "created_at", alternate = {"createdAt", "timestamp"})
     private long createdAt;
 
     // Transient client-decrypted text for UI rendering

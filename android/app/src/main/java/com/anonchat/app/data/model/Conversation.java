@@ -22,10 +22,10 @@ public class Conversation {
         @SerializedName("id")
         private String id;
 
-        @SerializedName("displayName")
+        @SerializedName(value = "displayName", alternate = {"display_name"})
         private String displayName;
 
-        @SerializedName("publicKey")
+        @SerializedName(value = "publicKey", alternate = {"public_key"})
         private String publicKey;
 
         @SerializedName("status")
@@ -41,7 +41,7 @@ public class Conversation {
         @SerializedName("id")
         private String id;
 
-        @SerializedName("senderId")
+        @SerializedName(value = "senderId", alternate = {"sender_id"})
         private String senderId;
 
         @SerializedName("status")

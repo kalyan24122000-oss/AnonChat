@@ -62,7 +62,12 @@ function setupSocketIO(io) {
     // 3. Send Encrypted Message
     socket.on('send_message', async (data, callback) => {
       try {
-        const { conversationId, recipientId, encryptedContent, iv, authTag, senderEphemeralKey } = data;
+        const conversationId = data.conversationId || data.conversation_id;
+        const recipientId = data.recipientId || data.recipient_id;
+        const encryptedContent = data.encryptedContent || data.encrypted_content;
+        const iv = data.iv;
+        const authTag = data.authTag || data.auth_tag;
+        const senderEphemeralKey = data.senderEphemeralKey || data.sender_ephemeral_key;
 
         if (!conversationId || !recipientId || !encryptedContent || !iv || !authTag) {
           if (callback) callback({ error: 'INVALID_PAYLOAD', message: 'Missing required encryption fields' });

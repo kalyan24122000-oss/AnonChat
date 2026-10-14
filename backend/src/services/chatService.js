@@ -30,10 +30,19 @@ function getOrCreateConversation(userAId, userBId) {
     WHERE cm1.user_id = ? AND cm2.user_id = ?
   `).get(userAId, userBId);
 
+  const formatRecipient = (u) => ({
+    id: u.id,
+    displayName: u.display_name,
+    display_name: u.display_name,
+    publicKey: u.public_key,
+    public_key: u.public_key,
+    status: u.status
+  });
+
   if (existingConv) {
     return {
       id: existingConv.conversation_id,
-      recipient: userB,
+      recipient: formatRecipient(userB),
       isNew: false
     };
   }
@@ -54,7 +63,7 @@ function getOrCreateConversation(userAId, userBId) {
 
     return {
       id: convId,
-      recipient: userB,
+      recipient: formatRecipient(userB),
       isNew: true
     };
   });
@@ -104,7 +113,9 @@ function getUserConversations(userId) {
       recipient: {
         id: conv.recipient_id,
         displayName: conv.recipient_name,
+        display_name: conv.recipient_name,
         publicKey: conv.recipient_public_key,
+        public_key: conv.recipient_public_key,
         status: conv.recipient_status
       },
       lastMessage: lastMsg ? {
@@ -177,14 +188,21 @@ function saveEncryptedMessage({
   return {
     id: messageId,
     conversationId,
+    conversation_id: conversationId,
     senderId,
+    sender_id: senderId,
     recipientId,
+    recipient_id: recipientId,
     encryptedContent,
+    encrypted_content: encryptedContent,
     iv,
     authTag,
+    auth_tag: authTag,
     senderEphemeralKey,
+    sender_ephemeral_key: senderEphemeralKey,
     status: 'sent',
-    createdAt: now
+    createdAt: now,
+    created_at: now
   };
 }
 
@@ -226,16 +244,25 @@ function getConversationMessages(conversationId, userId, limit = 50, beforeTimes
   return rows.map((r) => ({
     id: r.id,
     conversationId: r.conversation_id,
+    conversation_id: r.conversation_id,
     senderId: r.sender_id,
+    sender_id: r.sender_id,
     recipientId: r.recipient_id,
+    recipient_id: r.recipient_id,
     encryptedContent: r.encrypted_content,
+    encrypted_content: r.encrypted_content,
     iv: r.iv,
     authTag: r.auth_tag,
+    auth_tag: r.auth_tag,
     senderEphemeralKey: r.sender_ephemeral_key,
+    sender_ephemeral_key: r.sender_ephemeral_key,
     status: r.status,
     deliveredAt: r.delivered_at,
+    delivered_at: r.delivered_at,
     readAt: r.read_at,
-    createdAt: r.created_at
+    read_at: r.read_at,
+    createdAt: r.created_at,
+    created_at: r.created_at
   }));
 }
 

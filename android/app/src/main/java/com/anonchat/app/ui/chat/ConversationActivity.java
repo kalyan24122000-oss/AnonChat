@@ -159,6 +159,7 @@ public class ConversationActivity extends BaseSecureActivity {
     }
 
     private void lookupRecipientKey() {
+        if (recipientId == null) return;
         getApiService().searchUser(recipientId).enqueue(new Callback<Map<String, List<User>>>() {
             @Override
             public void onResponse(Call<Map<String, List<User>>> call, Response<Map<String, List<User>>> response) {
@@ -166,8 +167,12 @@ public class ConversationActivity extends BaseSecureActivity {
                     List<User> list = response.body().get("users");
                     if (list != null) {
                         for (User u : list) {
-                            if (recipientId.equals(u.getId())) {
-                                recipientPublicKey = u.getPublicKey();
+                            if (recipientId.equalsIgnoreCase(u.getId())) {
+                                String key = u.getPublicKey();
+                                if (key != null && !key.isEmpty()) {
+                                    recipientPublicKey = key;
+                                    redecryptAllMessages();
+                                }
                                 break;
                             }
                         }
@@ -178,6 +183,20 @@ public class ConversationActivity extends BaseSecureActivity {
             @Override
             public void onFailure(Call<Map<String, List<User>>> call, Throwable t) {}
         });
+    }
+
+    private void redecryptAllMessages() {
+        if (adapter == null) return;
+        boolean changed = false;
+        for (Message m : adapter.getMessages()) {
+            if (m.getPlaintext() == null || m.getPlaintext().startsWith("🔒")) {
+                decryptMessageLocally(m);
+                changed = true;
+            }
+        }
+        if (changed) {
+            adapter.notifyDataSetChanged();
+        }
     }
 
     private void loadMessageHistory() {
@@ -192,6 +211,9 @@ public class ConversationActivity extends BaseSecureActivity {
                         }
                         adapter.setMessages(list);
                         rvMessages.scrollToPosition(adapter.getItemCount() - 1);
+                        if (recipientPublicKey == null && recipientId != null) {
+                            lookupRecipientKey();
+                        }
                     }
                 }
             }
@@ -208,7 +230,8 @@ public class ConversationActivity extends BaseSecureActivity {
         if (plaintext.isEmpty()) return;
 
         if (recipientPublicKey == null) {
-            Toast.makeText(this, "Recipient public encryption key not found", Toast.LENGTH_SHORT).show();
+            lookupRecipientKey();
+            Toast.makeText(this, "Recipient encryption key not ready, fetching...", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -262,28 +285,64 @@ public class ConversationActivity extends BaseSecureActivity {
     }
 
     private void decryptMessageLocally(Message msg) {
+        if (msg == null) return;
         String myUserId = getPrefHelper().getUserId();
-        if (myUserId.equals(msg.getSenderId())) {
-            // Outgoing message already known or local preview
+        boolean isOutgoing = (myUserId != null && myUserId.equals(msg.getSenderId()));
+
+        if (isOutgoing) {
+            // If already decrypted or optimistic local send, keep plaintext
+            if (msg.getPlaintext() != null && !msg.getPlaintext().startsWith("🔒")) {
+                return;
+            }
+
+            // Outgoing message loaded from server history can also be decrypted locally
+            // because ECDH(myPrivateKey, recipientPublicKey) == ECDH(recipientPrivateKey, myPublicKey)!
+            if (recipientPublicKey != null && msg.getEncryptedContent() != null && msg.getIv() != null && msg.getAuthTag() != null) {
+                try {
+                    CryptoManager crypto = ((AnonChatApp) getApplication()).getCryptoManager();
+                    String decrypted = crypto.decryptMessage(
+                        msg.getEncryptedContent(),
+                        msg.getIv(),
+                        msg.getAuthTag(),
+                        recipientPublicKey
+                    );
+                    if (decrypted != null && !decrypted.startsWith("[")) {
+                        msg.setPlaintext(decrypted);
+                        return;
+                    }
+                } catch (Exception ignored) {}
+            }
             if (msg.getPlaintext() == null) {
                 msg.setPlaintext("🔒 [Encrypted Outgoing Message]");
             }
             return;
         }
 
+        // Incoming message
+        if (msg.getPlaintext() != null && !msg.getPlaintext().startsWith("🔒")) {
+            return;
+        }
+
+        if (recipientPublicKey == null) {
+            msg.setPlaintext("🔒 [Encrypted Payload - Awaiting Key]");
+            lookupRecipientKey();
+            return;
+        }
+
+        if (msg.getEncryptedContent() == null || msg.getIv() == null || msg.getAuthTag() == null) {
+            msg.setPlaintext("🔒 [Incomplete Payload]");
+            return;
+        }
+
         try {
-            if (recipientPublicKey != null) {
-                CryptoManager crypto = ((AnonChatApp) getApplication()).getCryptoManager();
-                String decrypted = crypto.decryptMessage(
-                    msg.getEncryptedContent(),
-                    msg.getIv(),
-                    msg.getAuthTag(),
-                    recipientPublicKey
-                );
-                msg.setPlaintext(decrypted);
-            } else {
-                msg.setPlaintext("🔒 [Encrypted Payload - Awaiting Key]");
-            }
+            CryptoManager crypto = ((AnonChatApp) getApplication()).getCryptoManager();
+            String decrypted = crypto.decryptMessage(
+                msg.getEncryptedContent(),
+                msg.getIv(),
+                msg.getAuthTag(),
+                recipientPublicKey
+            );
+            msg.setPlaintext(decrypted);
         } catch (Exception e) {
             msg.setPlaintext("🔒 [Decryption Error]");
         }

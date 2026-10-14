@@ -16,7 +16,7 @@ router.get('/conversations', authenticateToken, (req, res, next) => {
 // Create or get direct conversation with recipient
 router.post('/conversations', authenticateToken, (req, res, next) => {
   try {
-    const { recipientId } = req.body;
+    const recipientId = req.body.recipientId || req.body.recipient_id;
     if (!recipientId) {
       return res.status(400).json({ error: 'MISSING_RECIPIENT', message: 'recipientId is required' });
     }
@@ -43,7 +43,11 @@ router.get('/conversations/:id/messages', authenticateToken, (req, res, next) =>
 router.post('/conversations/:id/messages', authenticateToken, requireActiveSubscription, (req, res, next) => {
   try {
     const conversationId = req.params.id;
-    const { recipientId, encryptedContent, iv, authTag, senderEphemeralKey } = req.body;
+    const recipientId = req.body.recipientId || req.body.recipient_id;
+    const encryptedContent = req.body.encryptedContent || req.body.encrypted_content;
+    const iv = req.body.iv;
+    const authTag = req.body.authTag || req.body.auth_tag;
+    const senderEphemeralKey = req.body.senderEphemeralKey || req.body.sender_ephemeral_key;
 
     if (!recipientId || !encryptedContent || !iv || !authTag) {
       return res.status(400).json({
