@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
         fabNewChat = findViewById(R.id.fab_new_chat);
 
         setupChatsList();
+        setupNeumorphicControls();
 
         btnBannerActivate.setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, LicenseActivationActivity.class));
@@ -92,6 +93,87 @@ public class MainActivity extends AppCompatActivity {
 
         // Biometric Security Prompt
         checkBiometricAuth();
+    }
+
+    private List<Conversation> allConversations = new ArrayList<>();
+
+    private void setupNeumorphicControls() {
+        // Profile initial
+        TextView tvHeaderAvatar = findViewById(R.id.tv_header_avatar_initial);
+        String myId = prefHelper.getUserId();
+        if (tvHeaderAvatar != null && myId != null && !myId.isEmpty()) {
+            tvHeaderAvatar.setText(myId.substring(Math.max(0, myId.length() - 2)).toUpperCase());
+        }
+
+        View btnUserProfile = findViewById(R.id.btn_user_profile);
+        if (btnUserProfile != null) {
+            btnUserProfile.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
+        }
+
+        View btnHeaderAdd = findViewById(R.id.btn_header_add_chat);
+        if (btnHeaderAdd != null) {
+            btnHeaderAdd.setOnClickListener(v -> startActivity(new Intent(this, com.anonchat.app.ui.main.SearchUserActivity.class)));
+        }
+
+        // Search bar filter
+        android.widget.EditText etSearch = findViewById(R.id.et_search_chats);
+        if (etSearch != null) {
+            etSearch.addTextChangedListener(new android.text.TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    filterConversations(s != null ? s.toString() : "");
+                }
+                @Override public void afterTextChanged(android.text.Editable s) {}
+            });
+        }
+
+        // Bottom Dock tabs
+        View tabChats = findViewById(R.id.tab_chats);
+        if (tabChats != null) {
+            tabChats.setOnClickListener(v -> {
+                if (rvConversations != null) rvConversations.smoothScrollToPosition(0);
+                loadConversations();
+            });
+        }
+
+        View tabCamera = findViewById(R.id.tab_camera);
+        if (tabCamera != null) {
+            tabCamera.setOnClickListener(v -> {
+                Intent pickIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                pickIntent.setType("image/* video/*");
+                startActivity(Intent.createChooser(pickIntent, "Select Media to Share"));
+            });
+        }
+
+        View tabScan = findViewById(R.id.tab_scan);
+        if (tabScan != null) {
+            tabScan.setOnClickListener(v -> startActivity(new Intent(this, com.anonchat.app.ui.main.SearchUserActivity.class)));
+        }
+
+        View tabSettings = findViewById(R.id.tab_settings);
+        if (tabSettings != null) {
+            tabSettings.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
+        }
+    }
+
+    private void filterConversations(String query) {
+        if (allConversations == null || adapter == null) return;
+        if (query.trim().isEmpty()) {
+            adapter.setConversations(allConversations);
+            llEmptyState.setVisibility(allConversations.isEmpty() ? View.VISIBLE : View.GONE);
+            return;
+        }
+        List<Conversation> filtered = new ArrayList<>();
+        for (Conversation c : allConversations) {
+            String name = c.getRecipient() != null ? c.getRecipient().getDisplayName() : "";
+            String id = c.getRecipient() != null ? c.getRecipient().getId() : "";
+            if ((name != null && name.toLowerCase().contains(query.toLowerCase())) ||
+                (id != null && id.toLowerCase().contains(query.toLowerCase()))) {
+                filtered.add(c);
+            }
+        }
+        adapter.setConversations(filtered);
+        llEmptyState.setVisibility(filtered.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     private void checkBiometricAuth() {
@@ -238,8 +320,9 @@ public class MainActivity extends AppCompatActivity {
                 swipeRefresh.setRefreshing(false);
                 if (response.isSuccessful() && response.body() != null) {
                     List<Conversation> list = response.body().get("conversations");
-                    adapter.setConversations(list);
-                    llEmptyState.setVisibility(list == null || list.isEmpty() ? View.VISIBLE : View.GONE);
+                    allConversations = list != null ? list : new ArrayList<>();
+                    adapter.setConversations(allConversations);
+                    llEmptyState.setVisibility(allConversations.isEmpty() ? View.VISIBLE : View.GONE);
                 } else if (response.code() == 403) {
                     try {
                         String errStr = response.errorBody() != null ? response.errorBody().string() : "";

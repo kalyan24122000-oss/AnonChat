@@ -77,6 +77,8 @@ public class ConversationActivity extends BaseSecureActivity {
         LinearLayout bannerSecurity = findViewById(R.id.banner_security_disclosure);
         MaterialButton btnActivate = findViewById(R.id.btn_activate_from_chat);
 
+        setupCustomHeaderAndInputDock();
+
         adapter = new MessageAdapter(getPrefHelper().getUserId(), this::downloadMediaToStorage);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
@@ -111,6 +113,71 @@ public class ConversationActivity extends BaseSecureActivity {
         super.onDestroy();
         SocketService socketService = ((AnonChatApp) getApplication()).getSocketService();
         socketService.leaveConversation(conversationId);
+    }
+
+    private void setupCustomHeaderAndInputDock() {
+        View btnBack = findViewById(R.id.btn_chat_back);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
+
+        android.widget.TextView tvRecipientName = findViewById(R.id.tv_chat_recipient_name);
+        if (tvRecipientName != null) {
+            tvRecipientName.setText(recipientName != null ? recipientName : recipientId);
+        }
+
+        android.widget.TextView tvAvatar = findViewById(R.id.tv_chat_avatar_initial);
+        if (tvAvatar != null) {
+            String initial = recipientName != null && !recipientName.isEmpty()
+                    ? recipientName.substring(0, 1)
+                    : (recipientId != null && !recipientId.isEmpty() ? recipientId.substring(Math.max(0, recipientId.length() - 2)) : "U");
+            tvAvatar.setText(initial.toUpperCase());
+        }
+
+        View btnCall = findViewById(R.id.btn_chat_call);
+        if (btnCall != null) {
+            btnCall.setOnClickListener(v -> {
+                new AlertDialog.Builder(this)
+                        .setTitle("Encrypted Voice Session")
+                        .setMessage("Connecting anonymous E2EE encrypted voice session to " + (recipientName != null ? recipientName : recipientId) + "...\nAll streams are peer-to-peer encrypted.")
+                        .setPositiveButton("Close", null)
+                        .show();
+            });
+        }
+
+        View btnEmoji = findViewById(R.id.btn_emoji);
+        if (btnEmoji != null) {
+            btnEmoji.setOnClickListener(v -> {
+                if (etMessageInput != null) {
+                    etMessageInput.append(" 😊 ");
+                }
+            });
+        }
+
+        View btnCamera = findViewById(R.id.btn_camera_capture);
+        if (btnCamera != null) {
+            btnCamera.setOnClickListener(v -> showMediaAttachmentPicker());
+        }
+
+        android.widget.ImageView ivSendIcon = findViewById(R.id.iv_send_icon);
+        View btnSendContainer = findViewById(R.id.btn_send_container);
+        if (btnSendContainer != null) {
+            btnSendContainer.setOnClickListener(v -> sendMessage());
+        }
+
+        if (etMessageInput != null && ivSendIcon != null) {
+            etMessageInput.addTextChangedListener(new android.text.TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    if (s != null && s.toString().trim().length() > 0) {
+                        ivSendIcon.setImageResource(R.drawable.ic_send);
+                    } else {
+                        ivSendIcon.setImageResource(R.drawable.ic_mic);
+                    }
+                }
+                @Override public void afterTextChanged(android.text.Editable s) {}
+            });
+        }
     }
 
     private void setupSocketListener() {

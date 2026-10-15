@@ -1,31 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#128C7E</color>
-    <color name="primary_dark">#075E54</color>
-    <color name="primary_light">#E7F7F4</color>
-    <color name="accent">#25D366</color>
+    <!-- Dark Neumorphic & Coral Red Theme (Matching Provided Visual UI) -->
+    <color name="primary">#FF4D4D</color>
+    <color name="primary_dark">#131417</color>
+    <color name="primary_light">#2A1D1D</color>
+    <color name="accent">#FF4D4D</color>
     
-    <color name="background_white">#FFFFFF</color>
-    <color name="background_subtle">#F0F2F5</color>
-    <color name="background_card">#FFFFFF</color>
-    <color name="divider">#E9EDEF</color>
+    <color name="dark_background">#16171B</color>
+    <color name="dark_surface">#1F2228</color>
+    <color name="dark_surface_elevated">#262A32</color>
+    <color name="dark_sunken">#121316</color>
+    <color name="dark_card">#1E2127</color>
+    
+    <color name="background_white">#16171B</color>
+    <color name="background_subtle">#131417</color>
+    <color name="background_card">#1F2228</color>
+    <color name="divider">#242730</color>
 
-    <color name="text_primary">#111B21</color>
-    <color name="text_secondary">#667781</color>
-    <color name="text_muted">#8696A0</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#9CA3AF</color>
+    <color name="text_muted">#6B7280</color>
 
-    <color name="bubble_outgoing">#DCF8C6</color>
-    <color name="bubble_incoming">#FFFFFF</color>
+    <!-- Chat Message Bubbles -->
+    <color name="bubble_outgoing">#FF4D4D</color>
+    <color name="bubble_incoming">#23262D</color>
 
     <color name="badge_trial">#F59E0B</color>
     <color name="badge_premium">#10B981</color>
     <color name="badge_expired">#EF4444</color>
 
-    <color name="tick_sent">#8696A0</color>
-    <color name="tick_delivered">#8696A0</color>
-    <color name="tick_read">#53BDEB</color>
+    <color name="tick_sent">#9CA3AF</color>
+    <color name="tick_delivered">#9CA3AF</color>
+    <color name="tick_read">#FF4D4D</color>
 
-    <color name="danger">#DC2626</color>
+    <color name="danger">#EF4444</color>
     <color name="transparent">#00000000</color>
 
     <!-- Admin Badge & Customization Colors -->
