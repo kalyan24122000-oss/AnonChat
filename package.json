@@ -9,6 +9,7 @@
     "test": "cd backend && npm test"
   },
   "dependencies": {
+    "@supabase/server": "^1.9.2",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^13.0.3",
     "cors": "^2.8.5",

@@ -27,7 +27,13 @@ const config = {
   adminInitialId: process.env.ADMIN_INITIAL_ID || 'ADM-MASTER-01',
   corsOrigins: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['*'],
   rateLimitWindowMs: 15 * 60 * 1000, // 15 minutes
-  rateLimitMaxRequests: 300 // max 300 requests per 15 min per IP
+  rateLimitMaxRequests: 300, // max 300 requests per 15 min per IP
+  supabase: {
+    url: process.env.SUPABASE_URL || 'https://xgihneqqlatwxbevggci.supabase.co',
+    publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_jDis4tfV89Ww3R49HkGJLw_joOq08hL',
+    secretKey: process.env.SUPABASE_SECRET_KEY || '',
+    jwksUrl: process.env.SUPABASE_JWKS_URL || 'https://xgihneqqlatwxbevggci.supabase.co/auth/v1/.well-known/jwks.json'
+  }
 };
 
 module.exports = config;
