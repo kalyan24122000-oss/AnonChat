@@ -134,16 +134,6 @@ public class ConversationActivity extends BaseSecureActivity {
             tvAvatar.setText(initial.toUpperCase());
         }
 
-        View btnCall = findViewById(R.id.btn_chat_call);
-        if (btnCall != null) {
-            btnCall.setOnClickListener(v -> {
-                new AlertDialog.Builder(this)
-                        .setTitle("Encrypted Voice Session")
-                        .setMessage("Connecting anonymous E2EE encrypted voice session to " + (recipientName != null ? recipientName : recipientId) + "...\nAll streams are peer-to-peer encrypted.")
-                        .setPositiveButton("Close", null)
-                        .show();
-            });
-        }
 
         View btnEmoji = findViewById(R.id.btn_emoji);
         if (btnEmoji != null) {

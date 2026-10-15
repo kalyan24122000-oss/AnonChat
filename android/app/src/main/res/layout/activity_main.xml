@@ -244,14 +244,14 @@
 
         </LinearLayout>
 
-        <!-- 5. Floating Bottom Navigation Dock Bar (Matching Screen 1) -->
+        <!-- 5. Floating Bottom Navigation Dock Bar (Chats & Settings Only) -->
         <LinearLayout
             android:id="@+id/ll_bottom_dock"
             android:layout_width="match_parent"
             android:layout_height="64dp"
             android:layout_alignParentBottom="true"
-            android:layout_marginStart="28dp"
-            android:layout_marginEnd="28dp"
+            android:layout_marginStart="36dp"
+            android:layout_marginEnd="36dp"
             android:layout_marginBottom="16dp"
             android:background="@drawable/bg_dock_bar"
             android:elevation="12dp"
@@ -264,82 +264,72 @@
             <FrameLayout
                 android:id="@+id/tab_chats"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="6dp"
+                android:layout_marginEnd="8dp"
                 android:background="@drawable/bg_tab_active_coral"
                 android:clickable="true"
                 android:focusable="true">
 
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_chats"
-                    app:tint="#FFFFFF"
-                    android:contentDescription="Chats" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_chats"
+                        app:tint="#FFFFFF"
+                        android:contentDescription="Chats" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Chats"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </FrameLayout>
 
-            <!-- Tab 2: Camera / Photos -->
-            <FrameLayout
-                android:id="@+id/tab_camera"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
-                android:background="@drawable/bg_circle_button_dark"
-                android:clickable="true"
-                android:focusable="true">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_camera"
-                    app:tint="#9CA3AF"
-                    android:contentDescription="Camera" />
-            </FrameLayout>
-
-            <!-- Tab 3: Scan / Search User ID -->
-            <FrameLayout
-                android:id="@+id/tab_scan"
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
-                android:background="@drawable/bg_circle_button_dark"
-                android:clickable="true"
-                android:focusable="true">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_scan"
-                    app:tint="#9CA3AF"
-                    android:contentDescription="Scan QR" />
-            </FrameLayout>
-
-            <!-- Tab 4: Settings -->
+            <!-- Tab 2: Settings -->
             <FrameLayout
                 android:id="@+id/tab_settings"
                 android:layout_width="0dp"
-                android:layout_height="40dp"
+                android:layout_height="42dp"
                 android:layout_weight="1"
-                android:layout_marginStart="6dp"
+                android:layout_marginStart="8dp"
                 android:background="@drawable/bg_circle_button_dark"
                 android:clickable="true"
                 android:focusable="true">
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_settings"
-                    app:tint="#9CA3AF"
-                    android:contentDescription="Settings" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="19dp"
+                        android:layout_height="19dp"
+                        android:src="@drawable/ic_settings"
+                        app:tint="#9CA3AF"
+                        android:contentDescription="Settings" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Settings"
+                        android:textColor="#9CA3AF"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </FrameLayout>
         </LinearLayout>
 

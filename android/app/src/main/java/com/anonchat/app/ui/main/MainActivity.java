@@ -136,20 +136,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        View tabCamera = findViewById(R.id.tab_camera);
-        if (tabCamera != null) {
-            tabCamera.setOnClickListener(v -> {
-                Intent pickIntent = new Intent(Intent.ACTION_GET_CONTENT);
-                pickIntent.setType("image/* video/*");
-                startActivity(Intent.createChooser(pickIntent, "Select Media to Share"));
-            });
-        }
-
-        View tabScan = findViewById(R.id.tab_scan);
-        if (tabScan != null) {
-            tabScan.setOnClickListener(v -> startActivity(new Intent(this, com.anonchat.app.ui.main.SearchUserActivity.class)));
-        }
-
         View tabSettings = findViewById(R.id.tab_settings);
         if (tabSettings != null) {
             tabSettings.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
