@@ -173,6 +173,7 @@ const MIGRATIONS = [
           mime_type TEXT NOT NULL,
           file_size INTEGER NOT NULL,
           file_path TEXT NOT NULL,
+          base64_data TEXT,
           created_at INTEGER NOT NULL,
           expires_at INTEGER NOT NULL
         );
@@ -180,6 +181,17 @@ const MIGRATIONS = [
         CREATE INDEX IF NOT EXISTS idx_media_expires ON media_files(expires_at);
         CREATE INDEX IF NOT EXISTS idx_media_sender ON media_files(sender_id);
       `);
+    }
+  },
+  {
+    id: 3,
+    name: '003_media_base64_data',
+    up: (db) => {
+      try {
+        db.exec("ALTER TABLE media_files ADD COLUMN base64_data TEXT;");
+      } catch (e) {
+        // column may already exist
+      }
     }
   }
 ];

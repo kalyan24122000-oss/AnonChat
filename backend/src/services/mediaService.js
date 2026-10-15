@@ -40,9 +40,9 @@ function saveMedia({ senderId, fileName, mimeType, base64Data }) {
 
   const db = getDb();
   db.prepare(`
-    INSERT INTO media_files (id, sender_id, file_name, mime_type, file_size, file_path, created_at, expires_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(mediaId, senderId, sanitizedName, mimeType, fileSize, diskPath, now, expiresAt);
+    INSERT INTO media_files (id, sender_id, file_name, mime_type, file_size, file_path, base64_data, created_at, expires_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(mediaId, senderId, sanitizedName, mimeType, fileSize, diskPath, pureBase64, now, expiresAt);
 
   pushRecord('media_files', {
     id: mediaId,
@@ -51,6 +51,7 @@ function saveMedia({ senderId, fileName, mimeType, base64Data }) {
     mime_type: mimeType,
     file_size: fileSize,
     file_path: diskPath,
+    base64_data: pureBase64,
     created_at: now,
     expires_at: expiresAt
   });
@@ -98,6 +99,22 @@ function getMedia(mediaId) {
     error.statusCode = 410;
     error.code = 'MEDIA_EXPIRED';
     throw error;
+  }
+
+  // If local file is missing (e.g. Render container restart / ephemeral disk reset), restore from base64_data
+  if (!fs.existsSync(record.file_path)) {
+    if (record.base64_data) {
+      try {
+        if (!fs.existsSync(UPLOADS_DIR)) {
+          fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+        }
+        const pureBase64 = record.base64_data.replace(/^data:[^;]+;base64,/, '');
+        const buffer = Buffer.from(pureBase64, 'base64');
+        fs.writeFileSync(record.file_path, buffer);
+      } catch (err) {
+        console.error(`[Media] Failed to restore file from base64_data:`, err.message);
+      }
+    }
   }
 
   if (!fs.existsSync(record.file_path)) {

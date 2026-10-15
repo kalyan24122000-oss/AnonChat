@@ -79,38 +79,47 @@ public class Message {
     public void setPlaintext(String plaintext) { this.plaintext = plaintext; }
 
     public boolean isMedia() {
-        return plaintext != null && (plaintext.startsWith("[MEDIA:IMAGE:") || plaintext.startsWith("[MEDIA:VIDEO:"));
+        if (plaintext == null) return false;
+        return plaintext.startsWith("[MEDIA:IMAGE:") || plaintext.startsWith("[MEDIA:VIDEO:") ||
+               plaintext.startsWith("[MEDIA|IMAGE|") || plaintext.startsWith("[MEDIA|VIDEO|");
     }
 
     public boolean isImage() {
-        return plaintext != null && plaintext.startsWith("[MEDIA:IMAGE:");
+        if (plaintext == null) return false;
+        return plaintext.startsWith("[MEDIA:IMAGE:") || plaintext.startsWith("[MEDIA|IMAGE|");
     }
 
     public boolean isVideo() {
-        return plaintext != null && plaintext.startsWith("[MEDIA:VIDEO:");
+        if (plaintext == null) return false;
+        return plaintext.startsWith("[MEDIA:VIDEO:") || plaintext.startsWith("[MEDIA|VIDEO|");
+    }
+
+    private String[] getParts() {
+        if (!isMedia()) return new String[0];
+        String body = plaintext.substring(1, plaintext.length() - 1);
+        if (body.contains("|")) {
+            return body.split("\\|", 6);
+        }
+        return body.split(":", 6);
     }
 
     public String getMediaUrl() {
-        if (!isMedia()) return null;
-        String[] parts = plaintext.substring(1, plaintext.length() - 1).split(":");
+        String[] parts = getParts();
         return parts.length >= 3 ? parts[2] : null;
     }
 
     public String getMediaDownloadUrl() {
-        if (!isMedia()) return null;
-        String[] parts = plaintext.substring(1, plaintext.length() - 1).split(":");
+        String[] parts = getParts();
         return parts.length >= 4 ? parts[3] : getMediaUrl();
     }
 
     public String getMediaFileName() {
-        if (!isMedia()) return "Media";
-        String[] parts = plaintext.substring(1, plaintext.length() - 1).split(":");
-        return parts.length >= 5 ? parts[4] : "Media File";
+        String[] parts = getParts();
+        return parts.length >= 5 ? parts[4] : (isVideo() ? "video.mp4" : "image.jpg");
     }
 
     public long getMediaExpiresAt() {
-        if (!isMedia()) return 0;
-        String[] parts = plaintext.substring(1, plaintext.length() - 1).split(":");
+        String[] parts = getParts();
         if (parts.length >= 6) {
             try {
                 return Long.parseLong(parts[5]);

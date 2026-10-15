@@ -108,7 +108,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="AnonChat does not use in-app payment processors to protect your payment identity. Direct license issuance ensures zero financial footprint."
+                        android:text="Prime Chat does not use in-app payment processors to protect your payment identity. Direct license issuance ensures zero financial footprint."
                         android:textSize="12sp"
                         android:textColor="@color/text_primary" />
                 </LinearLayout>

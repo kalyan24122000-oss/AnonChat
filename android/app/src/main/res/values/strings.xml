@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AnonChat</string>
+    <string name="app_name">Prime Chat</string>
     <string name="tagline">Privacy-First ID-Based Messaging</string>
 
     <!-- Auth -->
@@ -63,7 +63,7 @@
     <!-- Biometric & Admin Customization -->
     <string name="biometric_title">Biometric App Lock</string>
     <string name="biometric_subtitle">Require Fingerprint or Face ID to open app</string>
-    <string name="biometric_prompt_msg">Unlock AnonChat with Biometrics</string>
+    <string name="biometric_prompt_msg">Unlock Prime Chat with Biometrics</string>
     <string name="admin_badge_color_title">Admin Profile Badge &amp; Ring Color</string>
 
     <!-- Media Images & Videos -->

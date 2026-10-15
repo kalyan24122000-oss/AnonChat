@@ -80,6 +80,7 @@ public class ConversationActivity extends BaseSecureActivity {
         setupCustomHeaderAndInputDock();
 
         adapter = new MessageAdapter(getPrefHelper().getUserId(), this::downloadMediaToStorage);
+        adapter.setBaseUrl(getPrefHelper().getBaseUrl());
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
         rvMessages.setLayoutManager(layoutManager);
@@ -390,7 +391,7 @@ public class ConversationActivity extends BaseSecureActivity {
                         msg.getAuthTag(),
                         recipientPublicKey
                     );
-                    if (decrypted != null && !decrypted.startsWith("[")) {
+                    if (decrypted != null && !decrypted.isEmpty()) {
                         msg.setPlaintext(decrypted);
                         return;
                     }
@@ -403,7 +404,7 @@ public class ConversationActivity extends BaseSecureActivity {
         }
 
         // Incoming message
-        if (msg.getPlaintext() != null && !msg.getPlaintext().startsWith("[")) {
+        if (msg.getPlaintext() != null && (msg.isMedia() || (!msg.getPlaintext().startsWith("[") && !msg.getPlaintext().isEmpty()))) {
             return;
         }
 
@@ -557,6 +558,10 @@ public class ConversationActivity extends BaseSecureActivity {
                 byte[] bytes = buffer.toByteArray();
                 is.close();
 
+                final android.graphics.Bitmap localThumb = !isVideo
+                    ? com.anonchat.app.utils.ImageLoader.decodeSampledBitmap(bytes, 400, 400)
+                    : null;
+
                 String base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP);
                 String mimeType = getContentResolver().getType(uri);
                 if (mimeType == null) {
@@ -579,6 +584,11 @@ public class ConversationActivity extends BaseSecureActivity {
                                 String url = (String) mediaMap.get("url");
                                 String downloadUrl = (String) mediaMap.get("downloadUrl");
                                 String serverFileName = (String) mediaMap.get("fileName");
+
+                                if (localThumb != null && url != null) {
+                                    com.anonchat.app.utils.ImageLoader.getInstance().cacheBitmap(url, localThumb);
+                                }
+
                                 String mediaPayload = String.format("[MEDIA:%s:%s:%s:%s:%d]",
                                     isVideo ? "VIDEO" : "IMAGE",
                                     url,
@@ -644,15 +654,23 @@ public class ConversationActivity extends BaseSecureActivity {
         if (rawUrl == null) rawUrl = msg.getMediaUrl();
         if (rawUrl == null) return;
 
-        String baseUrl = getPrefHelper().getBaseUrl();
-        if (baseUrl.endsWith("/") && rawUrl.startsWith("/")) {
-            rawUrl = rawUrl.substring(1);
+        String fullUrl;
+        if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+            fullUrl = rawUrl;
+        } else {
+            String baseUrl = getPrefHelper().getBaseUrl();
+            if (baseUrl.endsWith("/") && rawUrl.startsWith("/")) {
+                rawUrl = rawUrl.substring(1);
+            } else if (!baseUrl.endsWith("/") && !rawUrl.startsWith("/")) {
+                rawUrl = "/" + rawUrl;
+            }
+            fullUrl = baseUrl + rawUrl;
         }
-        final String fullUrl = baseUrl + rawUrl;
+
         final String fileName = msg.getMediaFileName();
         final boolean isVideo = msg.isVideo();
 
-        Toast.makeText(this, "Downloading to device storage...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Downloading " + fileName + "...", Toast.LENGTH_SHORT).show();
 
         new Thread(() -> {
             try {
@@ -665,31 +683,70 @@ public class ConversationActivity extends BaseSecureActivity {
                     return;
                 }
 
-                java.io.File storageDir;
+                byte[] mediaBytes = response.body().bytes();
+                android.net.Uri fileUri = null;
+
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                    storageDir = new java.io.File(getExternalFilesDir(null), isVideo ? "Movies" : "Pictures");
+                    android.content.ContentValues values = new android.content.ContentValues();
+                    values.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+                    values.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, isVideo ? "video/mp4" : "image/jpeg");
+                    values.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH,
+                        isVideo ? android.os.Environment.DIRECTORY_MOVIES + "/PrimeChat" : android.os.Environment.DIRECTORY_PICTURES + "/PrimeChat");
+                    values.put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1);
+
+                    android.net.Uri collection = isVideo
+                        ? android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+                        : android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
+                    fileUri = getContentResolver().insert(collection, values);
+                    if (fileUri != null) {
+                        try (java.io.OutputStream os = getContentResolver().openOutputStream(fileUri)) {
+                            if (os != null) {
+                                os.write(mediaBytes);
+                                os.flush();
+                            }
+                        }
+                        values.clear();
+                        values.put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0);
+                        getContentResolver().update(fileUri, values, null, null);
+                    }
                 } else {
-                    storageDir = new java.io.File(android.os.Environment.getExternalStoragePublicDirectory(
-                        isVideo ? android.os.Environment.DIRECTORY_MOVIES : android.os.Environment.DIRECTORY_PICTURES), "AnonChat");
+                    java.io.File publicDir = new java.io.File(
+                        android.os.Environment.getExternalStoragePublicDirectory(
+                            isVideo ? android.os.Environment.DIRECTORY_MOVIES : android.os.Environment.DIRECTORY_PICTURES
+                        ), "PrimeChat"
+                    );
+                    if (!publicDir.exists()) publicDir.mkdirs();
+                    java.io.File destFile = new java.io.File(publicDir, fileName);
+                    try (java.io.FileOutputStream fos = new java.io.FileOutputStream(destFile)) {
+                        fos.write(mediaBytes);
+                        fos.flush();
+                    }
+
+                    android.media.MediaScannerConnection.scanFile(
+                        ConversationActivity.this,
+                        new String[]{destFile.getAbsolutePath()},
+                        new String[]{isVideo ? "video/mp4" : "image/jpeg"},
+                        null
+                    );
+                    fileUri = androidx.core.content.FileProvider.getUriForFile(
+                        ConversationActivity.this,
+                        getPackageName() + ".fileprovider",
+                        destFile
+                    );
                 }
-                if (!storageDir.exists()) storageDir.mkdirs();
 
-                java.io.File destFile = new java.io.File(storageDir, fileName);
-                java.io.FileOutputStream fos = new java.io.FileOutputStream(destFile);
-                fos.write(response.body().bytes());
-                fos.flush();
-                fos.close();
-
-                // Scan file so it shows in Gallery / Storage
-                android.media.MediaScannerConnection.scanFile(
-                    ConversationActivity.this,
-                    new String[]{destFile.getAbsolutePath()},
-                    null,
-                    null
-                );
-
+                final android.net.Uri finalUri = fileUri;
                 runOnUiThread(() -> {
-                    Toast.makeText(ConversationActivity.this, getString(R.string.media_saved_toast, destFile.getName()), Toast.LENGTH_LONG).show();
+                    Toast.makeText(ConversationActivity.this, "Saved to device: " + fileName, Toast.LENGTH_LONG).show();
+                    if (finalUri != null) {
+                        try {
+                            android.content.Intent viewIntent = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+                            viewIntent.setDataAndType(finalUri, isVideo ? "video/*" : "image/*");
+                            viewIntent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            startActivity(android.content.Intent.createChooser(viewIntent, "Open " + (isVideo ? "Video" : "Image")));
+                        } catch (Exception ignored) {}
+                    }
                 });
 
             } catch (Exception e) {

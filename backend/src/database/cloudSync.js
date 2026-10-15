@@ -171,13 +171,13 @@ async function pullFromSupabase(localDb) {
     if (mediaRes.rows.length > 0) {
       const stmt = localDb.prepare(`
         INSERT OR REPLACE INTO media_files (
-          id, sender_id, file_name, mime_type, file_size, file_path, created_at, expires_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          id, sender_id, file_name, mime_type, file_size, file_path, base64_data, created_at, expires_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       for (const mf of mediaRes.rows) {
         stmt.run(
           mf.id, mf.sender_id, mf.file_name, mf.mime_type, Number(mf.file_size),
-          mf.file_path, Number(mf.created_at), Number(mf.expires_at)
+          mf.file_path, mf.base64_data || null, Number(mf.created_at), Number(mf.expires_at)
         );
       }
     }

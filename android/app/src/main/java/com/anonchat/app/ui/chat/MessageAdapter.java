@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.anonchat.app.R;
 import com.anonchat.app.data.model.Message;
 import com.anonchat.app.utils.DateFormatter;
+import com.anonchat.app.utils.ImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private final List<Message> messages = new ArrayList<>();
     private final String currentUserId;
     private final OnMediaClickListener mediaClickListener;
+    private String baseUrl;
 
     public MessageAdapter(String currentUserId) {
         this(currentUserId, null);
@@ -37,6 +39,10 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public MessageAdapter(String currentUserId, OnMediaClickListener mediaClickListener) {
         this.currentUserId = currentUserId;
         this.mediaClickListener = mediaClickListener;
+    }
+
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
     }
 
     public List<Message> getMessages() {
@@ -112,9 +118,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Message msg = messages.get(position);
         if (holder instanceof SentViewHolder) {
-            ((SentViewHolder) holder).bind(msg, mediaClickListener);
+            ((SentViewHolder) holder).bind(msg, mediaClickListener, baseUrl);
         } else if (holder instanceof ReceivedViewHolder) {
-            ((ReceivedViewHolder) holder).bind(msg, mediaClickListener);
+            ((ReceivedViewHolder) holder).bind(msg, mediaClickListener, baseUrl);
         }
     }
 
@@ -147,7 +153,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             btnMediaDownload = itemView.findViewById(R.id.btn_media_download);
         }
 
-        public void bind(Message msg, OnMediaClickListener listener) {
+        public void bind(Message msg, OnMediaClickListener listener, String baseUrl) {
             tvTime.setText(DateFormatter.formatMessageTime(msg.getCreatedAt()));
 
             if (msg.isMedia()) {
@@ -161,7 +167,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     ivMediaThumbnail.setImageResource(R.drawable.ic_video);
                 } else {
                     ivVideoPlayBadge.setVisibility(View.GONE);
-                    ivMediaThumbnail.setImageResource(R.drawable.ic_image);
+                    ImageLoader.getInstance().loadThumbnail(
+                        ivMediaThumbnail,
+                        msg.getMediaUrl(),
+                        baseUrl,
+                        R.drawable.ic_image
+                    );
                 }
 
                 View.OnClickListener clickAction = v -> {
@@ -211,7 +222,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             btnMediaDownload = itemView.findViewById(R.id.btn_media_download);
         }
 
-        public void bind(Message msg, OnMediaClickListener listener) {
+        public void bind(Message msg, OnMediaClickListener listener, String baseUrl) {
             tvTime.setText(DateFormatter.formatMessageTime(msg.getCreatedAt()));
 
             if (msg.isMedia()) {
@@ -225,7 +236,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     ivMediaThumbnail.setImageResource(R.drawable.ic_video);
                 } else {
                     ivVideoPlayBadge.setVisibility(View.GONE);
-                    ivMediaThumbnail.setImageResource(R.drawable.ic_image);
+                    ImageLoader.getInstance().loadThumbnail(
+                        ivMediaThumbnail,
+                        msg.getMediaUrl(),
+                        baseUrl,
+                        R.drawable.ic_image
+                    );
                 }
 
                 View.OnClickListener clickAction = v -> {

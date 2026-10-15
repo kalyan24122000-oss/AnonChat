@@ -137,10 +137,12 @@ CREATE TABLE IF NOT EXISTS public.media_files (
   mime_type TEXT NOT NULL,
   file_size BIGINT NOT NULL,
   file_path TEXT NOT NULL,
+  base64_data TEXT,
   created_at BIGINT NOT NULL,
   expires_at BIGINT NOT NULL
 );
 
+ALTER TABLE public.media_files ADD COLUMN IF NOT EXISTS base64_data TEXT;
 CREATE INDEX IF NOT EXISTS idx_media_expires ON public.media_files(expires_at);
 
 -- Disable Row Level Security (RLS) for backend service operations or enable full service role bypass
