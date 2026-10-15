@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { getDb } = require('../database/db');
+const { pushRecord, deleteRecord } = require('../database/cloudSync');
 
 const UPLOADS_DIR = path.join(__dirname, '../../uploads');
 
@@ -43,6 +44,17 @@ function saveMedia({ senderId, fileName, mimeType, base64Data }) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `).run(mediaId, senderId, sanitizedName, mimeType, fileSize, diskPath, now, expiresAt);
 
+  pushRecord('media_files', {
+    id: mediaId,
+    sender_id: senderId,
+    file_name: sanitizedName,
+    mime_type: mimeType,
+    file_size: fileSize,
+    file_path: diskPath,
+    created_at: now,
+    expires_at: expiresAt
+  });
+
   return {
     id: mediaId,
     mediaId,
@@ -80,6 +92,7 @@ function getMedia(mediaId) {
       console.error(`[Media] Failed to delete expired file ${record.file_path}:`, e.message);
     }
     db.prepare('DELETE FROM media_files WHERE id = ?').run(mediaId);
+    deleteRecord('media_files', mediaId);
 
     const error = new Error('This media file has expired (7-day retention limit) and was permanently deleted from the database.');
     error.statusCode = 410;

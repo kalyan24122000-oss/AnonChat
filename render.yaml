@@ -18,3 +18,21 @@ services:
         value: ADM-MASTER-01
       - key: ADMIN_INITIAL_PASSWORD
         value: AnonAdminSecure2026!#
+      - key: DATABASE_URL
+        sync: false
+      - key: PGHOST
+        value: db.xgihneqqlatwxbevggci.supabase.co
+      - key: PGPORT
+        value: "5432"
+      - key: PGDATABASE
+        value: postgres
+      - key: PGUSER
+        value: postgres
+      - key: PGPASSWORD
+        sync: false
+      - key: SUPABASE_URL
+        value: https://xgihneqqlatwxbevggci.supabase.co
+      - key: SUPABASE_PUBLISHABLE_KEY
+        value: sb_publishable_jDis4tfV89Ww3R49HkGJLw_joOq08hL
+      - key: SUPABASE_SECRET_KEY
+        sync: false

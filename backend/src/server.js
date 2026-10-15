@@ -16,6 +16,15 @@ async function startServer() {
     console.log('[AnonChat] Running database seeds...');
     await runSeeds();
 
+    // Restore persistent data from Supabase PostgreSQL (survives Render ephemeral shutdowns)
+    try {
+      const { pullFromSupabase } = require('./database/cloudSync');
+      const { getDb } = require('./database/db');
+      await pullFromSupabase(getDb());
+    } catch (syncErr) {
+      console.warn('[AnonChat] Supabase initial pull warning:', syncErr.message);
+    }
+
     const server = http.createServer(app);
 
     // Socket.IO configuration

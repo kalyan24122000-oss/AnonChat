@@ -1,6 +1,7 @@
 const crypto = require('node:crypto');
 const { getDb, runTransaction } = require('../database/db');
 const { generateLicenseKey } = require('../utils/idGenerator');
+const { pushRecord } = require('../database/cloudSync');
 
 /**
  * Get user subscription & trial status with exact server-side calculations
@@ -176,6 +177,11 @@ function redeemLicense({ key, userId }) {
       now
     );
 
+    const updatedLic = db.prepare('SELECT * FROM licenses WHERE id = ?').get(license.id);
+    if (updatedLic) pushRecord('licenses', updatedLic);
+    const updatedUsr = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
+    if (updatedUsr) pushRecord('users', updatedUsr);
+
     const daysTotal = Math.ceil((newPremiumExpiresAt - now) / (24 * 60 * 60 * 1000));
 
     return {
@@ -212,6 +218,9 @@ function createLicense({ planId, adminId, notes = null }) {
       id, license_key, plan_id, status, created_by_admin_id, notes, created_at
     ) VALUES (?, ?, ?, 'unused', ?, ?, ?)
   `).run(id, key, planId, adminId, notes ? notes.trim() : null, now);
+
+  const newLic = db.prepare('SELECT * FROM licenses WHERE id = ?').get(id);
+  if (newLic) pushRecord('licenses', newLic);
 
   db.prepare(`
     INSERT INTO audit_logs (id, actor_id, action, target_id, details, created_at)
@@ -253,6 +262,9 @@ function revokeLicense(licenseId, adminId) {
   db.prepare(`
     UPDATE licenses SET status = 'revoked', revoked_at = ? WHERE id = ?
   `).run(now, licenseId);
+
+  const revokedLic = db.prepare('SELECT * FROM licenses WHERE id = ?').get(licenseId);
+  if (revokedLic) pushRecord('licenses', revokedLic);
 
   db.prepare(`
     INSERT INTO audit_logs (id, actor_id, action, target_id, details, created_at)
@@ -305,6 +317,9 @@ function updatePlan(planId, { name, duration_days, description, features, is_act
     SET name = ?, duration_days = ?, description = ?, features = ?, is_active = ?, updated_at = ?
     WHERE id = ?
   `).run(updatedName, updatedDuration, updatedDesc, updatedFeatures, updatedActive, now, planId);
+
+  const updatedPlan = db.prepare('SELECT * FROM plans WHERE id = ?').get(planId);
+  if (updatedPlan) pushRecord('plans', updatedPlan);
 
   db.prepare(`
     INSERT INTO audit_logs (id, actor_id, action, target_id, details, created_at)

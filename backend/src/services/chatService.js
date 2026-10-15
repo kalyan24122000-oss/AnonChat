@@ -1,5 +1,6 @@
 const crypto = require('node:crypto');
 const { getDb, runTransaction } = require('../database/db');
+const { pushRecord } = require('../database/cloudSync');
 
 /**
  * Get or create a direct conversation between two users
@@ -63,6 +64,10 @@ function getOrCreateConversation(userAId, userBId) {
 
     conn.prepare('INSERT INTO conversation_members (id, conversation_id, user_id, joined_at, last_read_at) VALUES (?, ?, ?, ?, ?)')
       .run(`cm_${convId}_${userBId}`, convId, userBId, now, 0);
+
+    pushRecord('conversations', { id: convId, type: 'direct', created_at: now, updated_at: now });
+    pushRecord('conversation_members', { id: `cm_${convId}_${userAId}`, conversation_id: convId, user_id: userAId, joined_at: now, last_read_at: now });
+    pushRecord('conversation_members', { id: `cm_${convId}_${userBId}`, conversation_id: convId, user_id: userBId, joined_at: now, last_read_at: 0 });
 
     return {
       id: convId,
@@ -191,6 +196,21 @@ function saveEncryptedMessage({
 
     conn.prepare('UPDATE conversations SET updated_at = ? WHERE id = ?')
       .run(now, conversationId);
+  });
+
+  pushRecord('messages', {
+    id: messageId,
+    conversation_id: conversationId,
+    sender_id: senderId,
+    recipient_id: recipientId,
+    encrypted_content: encryptedContent,
+    iv,
+    auth_tag: authTag,
+    sender_ephemeral_key: senderEphemeralKey || null,
+    status: 'sent',
+    delivered_at: null,
+    read_at: null,
+    created_at: now
   });
 
   return {

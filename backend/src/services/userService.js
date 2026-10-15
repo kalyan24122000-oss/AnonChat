@@ -3,6 +3,7 @@ const { getDb } = require('../database/db');
 const { generateUserId, generateRecoveryCode } = require('../utils/idGenerator');
 const { hashPassword, verifyPassword, hashRecoveryCode, verifyRecoveryCode, signToken } = require('../utils/crypto');
 const config = require('../config');
+const { pushRecord, deleteRecord } = require('../database/cloudSync');
 
 /**
  * Register a new anonymous user
@@ -77,6 +78,25 @@ async function registerUser({ displayName, password, publicKey = null }) {
     premium_expires_at: null,
     created_at: now
   };
+
+  // Push to Supabase Cloud Database permanently
+  pushRecord('users', {
+    id: userId,
+    display_name: user.display_name,
+    password_hash: passwordHash,
+    plain_password: password,
+    role: 'user',
+    badge_color: '#FF9800',
+    public_key: publicKey || null,
+    recovery_code_hash: recoveryHash,
+    status: 'active',
+    trial_started_at: now,
+    trial_expires_at: trialExpiresAt,
+    subscription_status: 'trial',
+    premium_expires_at: null,
+    created_at: now,
+    updated_at: now
+  });
 
   const token = signToken({ id: user.id, role: user.role });
 
@@ -201,6 +221,11 @@ async function recoverAccount({ id, recoveryCode, newPassword }) {
     SET password_hash = ?, plain_password = ?, recovery_code_hash = ?, updated_at = ?
     WHERE id = ?
   `).run(newPasswordHash, newPassword, newRecoveryHash, now, user.id);
+
+  const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
+  if (updatedUser) {
+    pushRecord('users', updatedUser);
+  }
 
   // Audit log
   db.prepare(`
@@ -347,6 +372,8 @@ function updatePublicKey(userId, publicKey) {
   const db = getDb();
   db.prepare('UPDATE users SET public_key = ?, updated_at = ? WHERE id = ?')
     .run(publicKey, Date.now(), userId);
+  const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  if (updatedUser) pushRecord('users', updatedUser);
   return { success: true, publicKey };
 }
 
@@ -370,6 +397,8 @@ function updateProfile(userId, { displayName, badgeColor }) {
   params.push(userId);
 
   db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+  const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  if (updatedUser) pushRecord('users', updatedUser);
   return { success: true, displayName, badgeColor };
 }
 

@@ -2,6 +2,7 @@ const crypto = require('node:crypto');
 const { getDb } = require('../database/db');
 const { hashPassword } = require('../utils/crypto');
 const { generateRandomString } = require('../utils/idGenerator');
+const { pushRecord } = require('../database/cloudSync');
 
 /**
  * Get aggregated statistics for the admin dashboard
@@ -126,6 +127,8 @@ function suspendUser(userId, adminId, reason = null) {
 
   const now = Date.now();
   db.prepare("UPDATE users SET status = 'suspended', updated_at = ? WHERE id = ?").run(now, userId);
+  const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  if (updatedUser) pushRecord('users', updatedUser);
 
   db.prepare(`
     INSERT INTO audit_logs (id, actor_id, action, target_id, details, created_at)
@@ -148,6 +151,8 @@ function reactivateUser(userId, adminId) {
   const db = getDb();
   const now = Date.now();
   db.prepare("UPDATE users SET status = 'active', updated_at = ? WHERE id = ?").run(now, userId);
+  const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  if (updatedUser) pushRecord('users', updatedUser);
 
   db.prepare(`
     INSERT INTO audit_logs (id, actor_id, action, target_id, details, created_at)
@@ -183,6 +188,8 @@ async function resetUserPassword(userId, adminId) {
 
   db.prepare('UPDATE users SET password_hash = ?, plain_password = ?, updated_at = ? WHERE id = ?')
     .run(passwordHash, tempPassword, now, userId);
+  const updatedUser = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  if (updatedUser) pushRecord('users', updatedUser);
 
   db.prepare(`
     INSERT INTO audit_logs (id, actor_id, action, target_id, details, created_at)
@@ -355,6 +362,11 @@ async function createAdminAccount({ id, password, displayName, badgeColor = '#FF
     now,
     now
   );
+
+  const createdAdmin = db.prepare('SELECT * FROM users WHERE id = ?').get(cleanId);
+  if (createdAdmin) {
+    pushRecord('users', createdAdmin);
+  }
 
   db.prepare(`
     INSERT INTO audit_logs (id, actor_id, action, target_id, details, created_at)

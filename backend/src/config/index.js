@@ -22,6 +22,7 @@ const config = {
   jwtSecret: process.env.JWT_SECRET || 'anonchat_super_secure_jwt_secret_dev_key_change_in_prod_2026',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '30d',
   dbPath: process.env.DB_PATH || path.resolve(__dirname, '../../data/anonchat.db'),
+  databaseUrl: process.env.DATABASE_URL || 'postgresql://postgres:Q2Bek*S-RSVXyc-@db.xgihneqqlatwxbevggci.supabase.co:5432/postgres',
   trialDurationDays: parseInt(process.env.TRIAL_DURATION_DAYS, 10) || 7,
   adminInitialPassword: process.env.ADMIN_INITIAL_PASSWORD || 'AnonAdminSecure2026!#',
   adminInitialId: process.env.ADMIN_INITIAL_ID || 'ADM-MASTER-01',
