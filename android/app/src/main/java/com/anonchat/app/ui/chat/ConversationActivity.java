@@ -150,23 +150,12 @@ public class ConversationActivity extends BaseSecureActivity {
         }
 
         android.widget.ImageView ivSendIcon = findViewById(R.id.iv_send_icon);
+        if (ivSendIcon != null) {
+            ivSendIcon.setImageResource(R.drawable.ic_send);
+        }
         View btnSendContainer = findViewById(R.id.btn_send_container);
         if (btnSendContainer != null) {
             btnSendContainer.setOnClickListener(v -> sendMessage());
-        }
-
-        if (etMessageInput != null && ivSendIcon != null) {
-            etMessageInput.addTextChangedListener(new android.text.TextWatcher() {
-                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (s != null && s.toString().trim().length() > 0) {
-                        ivSendIcon.setImageResource(R.drawable.ic_send);
-                    } else {
-                        ivSendIcon.setImageResource(R.drawable.ic_mic);
-                    }
-                }
-                @Override public void afterTextChanged(android.text.Editable s) {}
-            });
         }
     }
 

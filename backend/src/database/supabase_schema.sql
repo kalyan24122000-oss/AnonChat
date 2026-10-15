@@ -155,9 +155,13 @@ ALTER TABLE public.user_reports DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.media_files DISABLE ROW LEVEL SECURITY;
 
--- Seed Default Subscription Plans
+-- Seed Default Subscription Plans (Both short IDs and long IDs for full backward/forward compatibility)
 INSERT INTO public.plans (id, name, duration_days, description, features, is_active, created_at, updated_at)
 VALUES 
+  ('starter', 'Starter Anonymous', 30, '30 Days Full Anonymous E2EE Chat Access', '["e2ee_messaging","ephemeral_keys","zero_phone_email"]', 1, 1729000000000, 1729000000000),
+  ('pro', 'Pro Confidential', 90, '90 Days High-Privacy Messaging + Media Share', '["e2ee_messaging","ephemeral_keys","zero_phone_email","media_transfer"]', 1, 1729000000000, 1729000000000),
+  ('elite', 'Elite Sovereign', 180, '180 Days Sovereign Encryption + Multi-Device Ready', '["e2ee_messaging","ephemeral_keys","zero_phone_email","media_transfer","priority_relay"]', 1, 1729000000000, 1729000000000),
+  ('annual', 'Annual Fortress', 365, '365 Days Unconditional Secure Anonymous Communications', '["e2ee_messaging","ephemeral_keys","zero_phone_email","media_transfer","priority_relay","audit_shield"]', 1, 1729000000000, 1729000000000),
   ('plan_starter_30d', 'Starter Anonymous', 30, '30 Days Full Anonymous E2EE Chat Access', '["e2ee_messaging","ephemeral_keys","zero_phone_email"]', 1, 1729000000000, 1729000000000),
   ('plan_pro_90d', 'Pro Confidential', 90, '90 Days High-Privacy Messaging + Media Share', '["e2ee_messaging","ephemeral_keys","zero_phone_email","media_transfer"]', 1, 1729000000000, 1729000000000),
   ('plan_elite_180d', 'Elite Sovereign', 180, '180 Days Sovereign Encryption + Multi-Device Ready', '["e2ee_messaging","ephemeral_keys","zero_phone_email","media_transfer","priority_relay"]', 1, 1729000000000, 1729000000000),

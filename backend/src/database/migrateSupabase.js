@@ -78,6 +78,27 @@ async function migrateSupabase() {
   ]);
   console.log('[Supabase Migration] Seeded Administrator 2: ADM-MASTER-02');
 
+  // Seed the 4 standard plans matching backend/src/database/seeds.js
+  const standardPlans = [
+    { id: 'starter', name: 'Starter Anonymous', duration_days: 30, description: 'Standard anonymous private messaging channel for 30 days', features: '["Curve25519 / AES-256-GCM End-to-End Encryption","FLAG_SECURE Screen Capture Shield","Zero Identity Registration (No Phone / Email)","30-Day Guaranteed Service"]' },
+    { id: 'pro', name: 'Pro Confidential', duration_days: 90, description: 'Extended confidential privacy protection for 90 days', features: '["Everything in Starter Plan","90-Day Extended Access","Zero IP Logging Architecture","Priority Delivery Relays"]' },
+    { id: 'elite', name: 'Elite Sovereign', duration_days: 180, description: 'Advanced sovereign communications for security-critical users', features: '["Everything in Pro Plan","180-Day Key Management Support","Multi-Device Identity Support","Dedicated Node Routing"]' },
+    { id: 'annual', name: 'Annual Fortress', duration_days: 365, description: 'Full 1-year continuous high-privacy fortress channel', features: '["Full 365-Day Unlimited Anonymous Access","Highest Relay Priority","Direct Channel with Platform Owner","Immediate Access to All Future Privacy Features"]' }
+  ];
+
+  for (const p of standardPlans) {
+    await client.query(`
+      INSERT INTO public.plans (id, name, duration_days, description, features, is_active, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, 1, $6, $7)
+      ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        duration_days = EXCLUDED.duration_days,
+        description = EXCLUDED.description,
+        features = EXCLUDED.features;
+    `, [p.id, p.name, p.duration_days, p.description, p.features, now, now]);
+  }
+  console.log('[Supabase Migration] Seeded standard plans: starter, pro, elite, annual');
+
   // Verify created tables
   const tablesRes = await client.query(`
     SELECT table_name 

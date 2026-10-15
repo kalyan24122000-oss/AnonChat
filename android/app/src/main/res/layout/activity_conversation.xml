@@ -265,7 +265,8 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_mic"
+                android:layout_marginStart="2dp"
+                android:src="@drawable/ic_send"
                 app:tint="#FFFFFF"
                 android:contentDescription="@string/send" />
 

@@ -48,9 +48,7 @@ async function processSyncQueue() {
 }
 
 function isTestEnv() {
-  return process.env.NODE_ENV === 'test' || 
-         process.env.NODE_TEST_CONTEXT !== undefined || 
-         process.argv.some(arg => arg.includes('test'));
+  return process.env.NODE_ENV === 'test';
 }
 
 function enqueueSyncTask(taskFn) {
@@ -216,6 +214,7 @@ function pushRecord(table, record) {
       `;
 
       await pool.query(query, Object.values(record));
+      console.log(`[Supabase CloudSync] Pushed ${table} [${record.id || 'id'}] to Supabase successfully.`);
     } catch (err) {
       console.error(`[Supabase CloudSync Error pushing to ${table}]`, err.message);
     }
@@ -232,6 +231,7 @@ function deleteRecord(table, id) {
     try {
       const pool = getPgPool();
       await pool.query(`DELETE FROM public."${table}" WHERE "id" = $1;`, [id]);
+      console.log(`[Supabase CloudSync] Deleted ${table} [${id}] from Supabase.`);
     } catch (err) {
       console.error(`[Supabase CloudSync Error deleting from ${table}]`, err.message);
     }
