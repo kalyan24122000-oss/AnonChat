@@ -4,11 +4,12 @@ const app = require('./app');
 const config = require('./config');
 const { runMigrations } = require('./database/migrations');
 const { runSeeds } = require('./database/seeds');
-const { closeDb } = require('./database/db');
+const { closeDb, driverType } = require('./database/db');
 const setupSocketIO = require('./socket/socketHandler');
 
 async function startServer() {
   try {
+    console.log(`[AnonChat] SQLite Driver active: ${driverType}`);
     console.log('[AnonChat] Initializing database migrations...');
     runMigrations();
 

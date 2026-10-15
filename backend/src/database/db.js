@@ -1,24 +1,27 @@
 const fs = require('node:fs');
 const path = require('node:path');
-// Dual-driver SQLite adapter: prefer better-sqlite3 for broad Node 18+ / Render compatibility,
-// with graceful fallback to node:sqlite DatabaseSync (Node 22.5.0+) if available.
+// Dual-driver SQLite adapter: prefer built-in node:sqlite (Node >= 22.5.0) for zero native C++
+// ABI compilation issues and rock-solid stability, with fallback to better-sqlite3 on older runtimes.
 let SqliteDriver = null;
 let driverType = null;
 
 try {
-  SqliteDriver = require('better-sqlite3');
-  driverType = 'better-sqlite3';
+  const nodeSqlite = require('node:sqlite');
+  if (nodeSqlite && nodeSqlite.DatabaseSync) {
+    SqliteDriver = nodeSqlite.DatabaseSync;
+    driverType = 'node:sqlite';
+  }
 } catch (e1) {
+  // Not Node >= 22.5.0, fallback below
+}
+
+if (!SqliteDriver) {
   try {
-    const nodeSqlite = require('node:sqlite');
-    if (nodeSqlite && nodeSqlite.DatabaseSync) {
-      SqliteDriver = nodeSqlite.DatabaseSync;
-      driverType = 'node:sqlite';
-    }
+    SqliteDriver = require('better-sqlite3');
+    driverType = 'better-sqlite3';
   } catch (e2) {
-    // Both failed
     throw new Error(
-      `No SQLite driver found. Please ensure better-sqlite3 is installed. Details: better-sqlite3 error: ${e1.message}; node:sqlite error: ${e2.message}`
+      'No SQLite driver found. Please ensure Node >= 22.5.0 or that better-sqlite3 is installed.'
     );
   }
 }
@@ -87,5 +90,6 @@ function closeDb() {
 module.exports = {
   getDb,
   runTransaction,
-  closeDb
+  closeDb,
+  driverType
 };
