@@ -96,6 +96,13 @@ const api = {
     });
   },
 
+  createAdmin(id, password, displayName, badgeColor) {
+    return this.request('/admin/admins', {
+      method: 'POST',
+      body: { id, password, displayName, badgeColor }
+    });
+  },
+
   reactivateUser(userId) {
     return this.request(`/admin/users/${userId}/reactivate`, {
       method: 'POST'

@@ -53,10 +53,6 @@ public class LoginActivity extends AppCompatActivity {
 
         TextView tvRegister = findViewById(R.id.tv_go_to_register);
         TextView tvRecovery = findViewById(R.id.tv_go_to_recovery);
-        TextView tvChangeServer = findViewById(R.id.tv_change_server);
-
-        updateServerLabel(tvChangeServer);
-
         btnLogin.setOnClickListener(v -> performLogin());
 
         tvRegister.setOnClickListener(v -> {
@@ -67,47 +63,17 @@ public class LoginActivity extends AppCompatActivity {
             startActivity(new Intent(LoginActivity.this, RecoveryActivity.class));
         });
 
-        tvChangeServer.setOnClickListener(v -> showChangeServerDialog(tvChangeServer));
+        if (getIntent().getBooleanExtra("EXTRA_ACCOUNT_SUSPENDED", false)) {
+            showAccountSuspendedDialog();
+        }
     }
 
-    private void updateServerLabel(TextView tv) {
-        String url = prefHelper.getBaseUrl();
-        tv.setText("🌐 Server: " + url + " (Tap to Change)");
-    }
-
-    private void showChangeServerDialog(TextView tv) {
-        final android.widget.EditText input = new android.widget.EditText(this);
-        input.setText(prefHelper.getBaseUrl());
-        input.setHint("https://your-app.onrender.com/");
-        input.setSingleLine(true);
-        int padding = (int) (18 * getResources().getDisplayMetrics().density);
-        input.setPadding(padding, padding, padding, padding);
-
+    private void showAccountSuspendedDialog() {
         new androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Configure Server URL")
-            .setMessage("Enter the Render server URL or custom backend host:")
-            .setView(input)
-            .setPositiveButton("Save", (dialog, which) -> {
-                String newUrl = input.getText().toString().trim();
-                if (!newUrl.isEmpty()) {
-                    if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://")) {
-                        newUrl = "https://" + newUrl;
-                    }
-                    if (!newUrl.endsWith("/")) {
-                        newUrl += "/";
-                    }
-                    prefHelper.setBaseUrl(newUrl);
-                    ApiClient.reset();
-                    updateServerLabel(tv);
-                    Toast.makeText(LoginActivity.this, "Server URL updated!", Toast.LENGTH_SHORT).show();
-                }
-            })
-            .setNegativeButton("Reset Default", (dialog, which) -> {
-                prefHelper.setBaseUrl(com.anonchat.app.utils.Constants.DEFAULT_BASE_URL);
-                ApiClient.reset();
-                updateServerLabel(tv);
-                Toast.makeText(LoginActivity.this, "Reset to default endpoint", Toast.LENGTH_SHORT).show();
-            })
+            .setTitle(R.string.account_suspended_title)
+            .setMessage(R.string.account_suspended_message)
+            .setPositiveButton("OK", null)
+            .setCancelable(false)
             .show();
     }
 
@@ -138,6 +104,14 @@ public class LoginActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     AuthResponse auth = response.body();
                     prefHelper.saveAuth(auth.getToken(), auth.getUser().getId(), auth.getUser().getDisplayName());
+                    if (auth.getUser() != null) {
+                        if (auth.getUser().getRole() != null) {
+                            prefHelper.setUserRole(auth.getUser().getRole());
+                        }
+                        if (auth.getUser().getBadgeColor() != null) {
+                            prefHelper.setBadgeColor(auth.getUser().getBadgeColor());
+                        }
+                    }
 
                     // Publish public key to server if not set
                     publishPublicKeyIfNeeded();
@@ -148,12 +122,11 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(LoginActivity.this, "Welcome back", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
                     finish();
+                } else if (response.code() == 403) {
+                    etPassword.setText("");
+                    showAccountSuspendedDialog();
                 } else {
-                    String msg = "Invalid credentials";
-                    if (response.code() == 403) {
-                        msg = "Account has been suspended";
-                    }
-                    Toast.makeText(LoginActivity.this, msg, Toast.LENGTH_LONG).show();
+                    Toast.makeText(LoginActivity.this, "Invalid credentials", Toast.LENGTH_LONG).show();
                 }
             }
 

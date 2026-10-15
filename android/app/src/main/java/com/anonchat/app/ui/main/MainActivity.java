@@ -30,6 +30,7 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +47,10 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout bannerSubscription;
     private TextView tvSubscriptionStatus;
     private MaterialButton btnBannerActivate;
+
+    private FloatingActionButton fabNewChat;
+
+    private static boolean sBiometricAuthenticated = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,8 +78,52 @@ public class MainActivity extends AppCompatActivity {
         bannerSubscription = findViewById(R.id.banner_subscription);
         tvSubscriptionStatus = findViewById(R.id.tv_subscription_status);
         btnBannerActivate = findViewById(R.id.btn_banner_activate);
-        FloatingActionButton fabNewChat = findViewById(R.id.fab_new_chat);
+        fabNewChat = findViewById(R.id.fab_new_chat);
 
+        setupChatsList();
+
+        btnBannerActivate.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, LicenseActivationActivity.class));
+        });
+
+        // Initialize real-time socket connection
+        ((AnonChatApp) getApplication()).getSocketService().connect();
+        setupSocketListener();
+
+        // Biometric Security Prompt
+        checkBiometricAuth();
+    }
+
+    private void checkBiometricAuth() {
+        if (!sBiometricAuthenticated && prefHelper.isBiometricEnabled() && com.anonchat.app.utils.BiometricHelper.isBiometricAvailable(this)) {
+            com.anonchat.app.utils.BiometricHelper.showBiometricPrompt(this, new com.anonchat.app.utils.BiometricHelper.AuthListener() {
+                @Override
+                public void onAuthenticated() {
+                    sBiometricAuthenticated = true;
+                    loadSubscriptionStatus();
+                    loadConversations();
+                }
+
+                @Override
+                public void onError(String error) {
+                    Toast.makeText(MainActivity.this, "Authentication required: " + error, Toast.LENGTH_LONG).show();
+                    new androidx.appcompat.app.AlertDialog.Builder(MainActivity.this)
+                        .setTitle(R.string.biometric_title)
+                        .setMessage("Biometric authentication is required to access AnonChat communications.")
+                        .setPositiveButton("Retry", (dialog, which) -> checkBiometricAuth())
+                        .setNegativeButton("Exit", (dialog, which) -> finish())
+                        .setCancelable(false)
+                        .show();
+                }
+            });
+        } else {
+            sBiometricAuthenticated = true;
+            loadSubscriptionStatus();
+            loadConversations();
+        }
+    }
+
+    private void setupChatsList() {
         rvConversations.setLayoutManager(new LinearLayoutManager(this));
         adapter = new ConversationAdapter(conversation -> {
             Intent intent = new Intent(MainActivity.this, ConversationActivity.class);
@@ -96,14 +145,6 @@ public class MainActivity extends AppCompatActivity {
         fabNewChat.setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, SearchUserActivity.class));
         });
-
-        btnBannerActivate.setOnClickListener(v -> {
-            startActivity(new Intent(MainActivity.this, LicenseActivationActivity.class));
-        });
-
-        // Initialize real-time socket connection
-        ((AnonChatApp) getApplication()).getSocketService().connect();
-        setupSocketListener();
     }
 
     @Override
@@ -130,7 +171,24 @@ public class MainActivity extends AppCompatActivity {
             public void onSubscriptionExpired() {
                 loadSubscriptionStatus();
             }
+
+            @Override
+            public void onAccountSuspended() {
+                handleAccountSuspended();
+            }
         });
+    }
+
+    private void handleAccountSuspended() {
+        try {
+            ((AnonChatApp) getApplication()).getSocketService().disconnect();
+        } catch (Exception ignored) {}
+        prefHelper.clear();
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.putExtra("EXTRA_ACCOUNT_SUSPENDED", true);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finishAffinity();
     }
 
     private void loadSubscriptionStatus() {
@@ -182,6 +240,13 @@ public class MainActivity extends AppCompatActivity {
                     List<Conversation> list = response.body().get("conversations");
                     adapter.setConversations(list);
                     llEmptyState.setVisibility(list == null || list.isEmpty() ? View.VISIBLE : View.GONE);
+                } else if (response.code() == 403) {
+                    try {
+                        String errStr = response.errorBody() != null ? response.errorBody().string() : "";
+                        if (errStr.contains("ACCOUNT_SUSPENDED") || errStr.contains("Suspended")) {
+                            handleAccountSuspended();
+                        }
+                    } catch (Exception ignored) {}
                 }
             }
 

@@ -174,4 +174,21 @@ router.get('/database-inspector', (req, res, next) => {
   }
 });
 
+// Create additional administrator account
+router.post('/admins', async (req, res, next) => {
+  try {
+    const { id, password, displayName, badgeColor } = req.body;
+    const result = await adminService.createAdminAccount({
+      id,
+      password,
+      displayName,
+      badgeColor,
+      actorId: req.user.id
+    });
+    res.status(201).json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

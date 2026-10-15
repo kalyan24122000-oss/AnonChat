@@ -73,54 +73,82 @@ async function runSeeds(db = null) {
     }
   }
 
-  // 2. Seed Initial Admin if no admin exists
-  const adminCount = conn.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'admin'").get();
-  if (adminCount.count === 0) {
-    const adminId = config.adminInitialId;
-    const adminPassword = config.adminInitialPassword;
-    const passwordHash = await hashPassword(adminPassword);
+  // 2. Seed Initial Admins (Support multiple admins e.g. ADM-MASTER-01 and ADM-MASTER-02)
+  const ADMINS_TO_SEED = [
+    {
+      id: config.adminInitialId || 'ADM-MASTER-01',
+      password: config.adminInitialPassword || 'AnonAdminSecure2026!#',
+      displayName: 'System Administrator 1',
+      badgeColor: '#FF9800'
+    },
+    {
+      id: 'ADM-MASTER-02',
+      password: config.adminInitialPassword || 'AnonAdminSecure2026!#',
+      displayName: 'System Administrator 2',
+      badgeColor: '#FF9800'
+    }
+  ];
 
-    // 100 years trial/premium for master admin
-    const trialStartedAt = now;
-    const trialExpiresAt = now + (100 * 365 * 24 * 60 * 60 * 1000);
+  for (const admin of ADMINS_TO_SEED) {
+    const existingAdmin = conn.prepare("SELECT id FROM users WHERE id = ?").get(admin.id);
+    if (!existingAdmin) {
+      const passwordHash = await hashPassword(admin.password);
+      const trialStartedAt = now;
+      const trialExpiresAt = now + (100 * 365 * 24 * 60 * 60 * 1000);
 
-    conn.prepare(`
-      INSERT INTO users (
-        id, display_name, password_hash, role, status,
-        trial_started_at, trial_expires_at, subscription_status, premium_expires_at,
-        created_at, updated_at
-      ) VALUES (?, ?, ?, 'admin', 'active', ?, ?, 'active', ?, ?, ?)
-    `).run(
-      adminId,
-      'System Administrator',
-      passwordHash,
-      trialStartedAt,
-      trialExpiresAt,
-      trialExpiresAt,
-      now,
-      now
-    );
+      try {
+        conn.prepare(`
+          INSERT INTO users (
+            id, display_name, password_hash, plain_password, badge_color, role, status,
+            trial_started_at, trial_expires_at, subscription_status, premium_expires_at,
+            created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, 'admin', 'active', ?, ?, 'active', ?, ?, ?)
+        `).run(
+          admin.id,
+          admin.displayName,
+          passwordHash,
+          admin.password,
+          admin.badgeColor,
+          trialStartedAt,
+          trialExpiresAt,
+          trialExpiresAt,
+          now,
+          now
+        );
+      } catch (e) {
+        conn.prepare(`
+          INSERT INTO users (
+            id, display_name, password_hash, role, status,
+            trial_started_at, trial_expires_at, subscription_status, premium_expires_at,
+            created_at, updated_at
+          ) VALUES (?, ?, ?, 'admin', 'active', ?, ?, 'active', ?, ?, ?)
+        `).run(
+          admin.id,
+          admin.displayName,
+          passwordHash,
+          trialStartedAt,
+          trialExpiresAt,
+          trialExpiresAt,
+          now,
+          now
+        );
+      }
 
-    // Record audit log
-    conn.prepare(`
-      INSERT INTO audit_logs (id, actor_id, action, target_id, details, ip_address, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      `audit_${now}`,
-      'system',
-      'INITIAL_ADMIN_BOOTSTRAPPED',
-      adminId,
-      JSON.stringify({ adminId, role: 'admin' }),
-      '127.0.0.1',
-      now
-    );
+      conn.prepare(`
+        INSERT INTO audit_logs (id, actor_id, action, target_id, details, ip_address, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        `audit_${now}_${admin.id}`,
+        'system',
+        'ADMIN_BOOTSTRAPPED',
+        admin.id,
+        JSON.stringify({ adminId: admin.id, role: 'admin' }),
+        '127.0.0.1',
+        now
+      );
 
-    console.log(`=======================================================`);
-    console.log(`[BOOTSTRAP] Initial Admin Created:`);
-    console.log(`  Admin ID: ${adminId}`);
-    console.log(`  Password: ${adminPassword}`);
-    console.log(`  (Role: 'admin' explicitly enforced in database)`);
-    console.log(`=======================================================`);
+      console.log(`[BOOTSTRAP] Administrator Configured: ${admin.id} (${admin.displayName})`);
+    }
   }
 }
 

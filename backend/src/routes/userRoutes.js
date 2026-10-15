@@ -6,11 +6,23 @@ const { authenticateToken } = require('../middleware/auth');
 
 // Get current user profile and subscription details
 router.get('/me', authenticateToken, (req, res) => {
+  const fullUser = userService.getUserById(req.user.id) || req.user;
   const subStatus = licenseService.getSubscriptionStatus(req.user.id);
   res.json({
-    user: req.user,
+    user: fullUser,
     subscription: subStatus
   });
+});
+
+// Update profile (display name and/or badge color)
+router.put('/profile', authenticateToken, (req, res, next) => {
+  try {
+    const { displayName, badgeColor } = req.body;
+    const result = userService.updateProfile(req.user.id, { displayName, badgeColor });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
 });
 
 // Update E2EE public key

@@ -116,11 +116,22 @@
             android:textColor="@color/text_primary"
             android:textColorHint="@color/text_muted" />
 
+        <ImageView
+            android:id="@+id/btn_attach_media"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="6dp"
+            android:padding="10dp"
+            android:src="@drawable/ic_attach"
+            app:tint="@color/primary"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Attach Image or Video" />
+
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btn_send_message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="6dp"
             android:src="@drawable/ic_send"
             app:fabCustomSize="46dp"
             app:tint="@color/background_white"

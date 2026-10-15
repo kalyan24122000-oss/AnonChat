@@ -18,14 +18,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+
+    public interface OnMediaClickListener {
+        void onDownloadMedia(Message message);
+    }
+
     private static final int VIEW_TYPE_SENT = 1;
     private static final int VIEW_TYPE_RECEIVED = 2;
 
     private final List<Message> messages = new ArrayList<>();
     private final String currentUserId;
+    private final OnMediaClickListener mediaClickListener;
 
     public MessageAdapter(String currentUserId) {
+        this(currentUserId, null);
+    }
+
+    public MessageAdapter(String currentUserId, OnMediaClickListener mediaClickListener) {
         this.currentUserId = currentUserId;
+        this.mediaClickListener = mediaClickListener;
     }
 
     public List<Message> getMessages() {
@@ -101,9 +112,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Message msg = messages.get(position);
         if (holder instanceof SentViewHolder) {
-            ((SentViewHolder) holder).bind(msg);
+            ((SentViewHolder) holder).bind(msg, mediaClickListener);
         } else if (holder instanceof ReceivedViewHolder) {
-            ((ReceivedViewHolder) holder).bind(msg);
+            ((ReceivedViewHolder) holder).bind(msg, mediaClickListener);
         }
     }
 
@@ -116,17 +127,53 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         private final TextView tvText;
         private final TextView tvTime;
         private final ImageView ivStatus;
+        private final View containerMedia;
+        private final ImageView ivMediaThumbnail;
+        private final ImageView ivVideoPlayBadge;
+        private final TextView tvMediaName;
+        private final TextView tvMediaExpiryBadge;
+        private final View btnMediaDownload;
 
         public SentViewHolder(@NonNull View itemView) {
             super(itemView);
             tvText = itemView.findViewById(R.id.tv_message_text);
             tvTime = itemView.findViewById(R.id.tv_message_time);
             ivStatus = itemView.findViewById(R.id.iv_delivery_status);
+            containerMedia = itemView.findViewById(R.id.container_media);
+            ivMediaThumbnail = itemView.findViewById(R.id.iv_media_thumbnail);
+            ivVideoPlayBadge = itemView.findViewById(R.id.iv_video_play_badge);
+            tvMediaName = itemView.findViewById(R.id.tv_media_name);
+            tvMediaExpiryBadge = itemView.findViewById(R.id.tv_media_expiry_badge);
+            btnMediaDownload = itemView.findViewById(R.id.btn_media_download);
         }
 
-        public void bind(Message msg) {
-            tvText.setText(msg.getPlaintext() != null ? msg.getPlaintext() : "[Decrypted Message]");
+        public void bind(Message msg, OnMediaClickListener listener) {
             tvTime.setText(DateFormatter.formatMessageTime(msg.getCreatedAt()));
+
+            if (msg.isMedia()) {
+                tvText.setVisibility(View.GONE);
+                containerMedia.setVisibility(View.VISIBLE);
+                tvMediaName.setText(msg.getMediaFileName());
+                tvMediaExpiryBadge.setText("Auto-deletes in 7 days");
+
+                if (msg.isVideo()) {
+                    ivVideoPlayBadge.setVisibility(View.VISIBLE);
+                    ivMediaThumbnail.setImageResource(R.drawable.ic_video);
+                } else {
+                    ivVideoPlayBadge.setVisibility(View.GONE);
+                    ivMediaThumbnail.setImageResource(R.drawable.ic_image);
+                }
+
+                View.OnClickListener clickAction = v -> {
+                    if (listener != null) listener.onDownloadMedia(msg);
+                };
+                containerMedia.setOnClickListener(clickAction);
+                if (btnMediaDownload != null) btnMediaDownload.setOnClickListener(clickAction);
+            } else {
+                tvText.setVisibility(View.VISIBLE);
+                containerMedia.setVisibility(View.GONE);
+                tvText.setText(msg.getPlaintext() != null ? msg.getPlaintext() : "[Decrypted Message]");
+            }
 
             String status = msg.getStatus();
             if ("read".equalsIgnoreCase(status)) {
@@ -145,16 +192,52 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     static class ReceivedViewHolder extends RecyclerView.ViewHolder {
         private final TextView tvText;
         private final TextView tvTime;
+        private final View containerMedia;
+        private final ImageView ivMediaThumbnail;
+        private final ImageView ivVideoPlayBadge;
+        private final TextView tvMediaName;
+        private final TextView tvMediaExpiryBadge;
+        private final View btnMediaDownload;
 
         public ReceivedViewHolder(@NonNull View itemView) {
             super(itemView);
             tvText = itemView.findViewById(R.id.tv_message_text);
             tvTime = itemView.findViewById(R.id.tv_message_time);
+            containerMedia = itemView.findViewById(R.id.container_media);
+            ivMediaThumbnail = itemView.findViewById(R.id.iv_media_thumbnail);
+            ivVideoPlayBadge = itemView.findViewById(R.id.iv_video_play_badge);
+            tvMediaName = itemView.findViewById(R.id.tv_media_name);
+            tvMediaExpiryBadge = itemView.findViewById(R.id.tv_media_expiry_badge);
+            btnMediaDownload = itemView.findViewById(R.id.btn_media_download);
         }
 
-        public void bind(Message msg) {
-            tvText.setText(msg.getPlaintext() != null ? msg.getPlaintext() : "[Decrypted Message]");
+        public void bind(Message msg, OnMediaClickListener listener) {
             tvTime.setText(DateFormatter.formatMessageTime(msg.getCreatedAt()));
+
+            if (msg.isMedia()) {
+                tvText.setVisibility(View.GONE);
+                containerMedia.setVisibility(View.VISIBLE);
+                tvMediaName.setText(msg.getMediaFileName());
+                tvMediaExpiryBadge.setText("Auto-deletes in 7 days");
+
+                if (msg.isVideo()) {
+                    ivVideoPlayBadge.setVisibility(View.VISIBLE);
+                    ivMediaThumbnail.setImageResource(R.drawable.ic_video);
+                } else {
+                    ivVideoPlayBadge.setVisibility(View.GONE);
+                    ivMediaThumbnail.setImageResource(R.drawable.ic_image);
+                }
+
+                View.OnClickListener clickAction = v -> {
+                    if (listener != null) listener.onDownloadMedia(msg);
+                };
+                containerMedia.setOnClickListener(clickAction);
+                if (btnMediaDownload != null) btnMediaDownload.setOnClickListener(clickAction);
+            } else {
+                tvText.setVisibility(View.VISIBLE);
+                containerMedia.setVisibility(View.GONE);
+                tvText.setText(msg.getPlaintext() != null ? msg.getPlaintext() : "[Decrypted Message]");
+            }
         }
     }
 }

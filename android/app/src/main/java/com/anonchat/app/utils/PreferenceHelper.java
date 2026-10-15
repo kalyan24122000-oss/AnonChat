@@ -61,6 +61,30 @@ public class PreferenceHelper {
         return getToken() != null && getUserId() != null;
     }
 
+    public boolean isBiometricEnabled() {
+        return prefs.getBoolean("pref_biometric_enabled", true);
+    }
+
+    public void setBiometricEnabled(boolean enabled) {
+        prefs.edit().putBoolean("pref_biometric_enabled", enabled).apply();
+    }
+
+    public String getBadgeColor() {
+        return prefs.getString("pref_badge_color", "#FF9800");
+    }
+
+    public void setBadgeColor(String color) {
+        prefs.edit().putString("pref_badge_color", color).apply();
+    }
+
+    public String getUserRole() {
+        return prefs.getString("pref_user_role", "user");
+    }
+
+    public void setUserRole(String role) {
+        prefs.edit().putString("pref_user_role", role).apply();
+    }
+
     public void clear() {
         prefs.edit().clear().apply();
     }

@@ -86,6 +86,14 @@ public class RegisterActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     AuthResponse auth = response.body();
                     prefHelper.saveAuth(auth.getToken(), auth.getUser().getId(), auth.getUser().getDisplayName());
+                    if (auth.getUser() != null) {
+                        if (auth.getUser().getRole() != null) {
+                            prefHelper.setUserRole(auth.getUser().getRole());
+                        }
+                        if (auth.getUser().getBadgeColor() != null) {
+                            prefHelper.setBadgeColor(auth.getUser().getBadgeColor());
+                        }
+                    }
 
                     // Start real-time socket
                     ((AnonChatApp) getApplication()).getSocketService().connect();

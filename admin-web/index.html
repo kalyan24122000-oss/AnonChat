@@ -164,6 +164,7 @@
                   <option value="suspended">Suspended</option>
                 </select>
                 <button id="user-search-btn" class="btn btn-primary btn-sm">Filter</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="openModal('modal-create-admin')">+ Create Admin</button>
               </div>
             </div>
             <div class="table-responsive">
@@ -173,6 +174,7 @@
                     <th>User ID</th>
                     <th>Display Name</th>
                     <th>Role</th>
+                    <th>Password</th>
                     <th>Account Status</th>
                     <th>Subscription</th>
                     <th>Access Expiry</th>
@@ -343,6 +345,47 @@
     </div>
   </div>
 
+  <!-- MODAL: Create Admin -->
+  <div id="modal-create-admin" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h4>Create New Administrator</h4>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-create-admin')">✕</button>
+      </div>
+      <form id="form-create-admin">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="create-admin-id">Admin User ID (must start with ADM-)</label>
+            <input type="text" id="create-admin-id" class="form-control mono" placeholder="e.g. ADM-MASTER-02" required>
+          </div>
+          <div class="form-group">
+            <label for="create-admin-name">Display Name</label>
+            <input type="text" id="create-admin-name" class="form-control" placeholder="e.g. Second Administrator" required>
+          </div>
+          <div class="form-group">
+            <label for="create-admin-pwd">Admin Password</label>
+            <input type="password" id="create-admin-pwd" class="form-control mono" placeholder="Min 8 characters" required>
+          </div>
+          <div class="form-group">
+            <label for="create-admin-color">Badge &amp; Outline Color</label>
+            <select id="create-admin-color" class="form-control">
+              <option value="#FF9800" selected>Orange (#FF9800 - Default)</option>
+              <option value="#10B981">Emerald Green (#10B981)</option>
+              <option value="#EF4444">Crimson Red (#EF4444)</option>
+              <option value="#3B82F6">Royal Blue (#3B82F6)</option>
+              <option value="#8B5CF6">Purple (#8B5CF6)</option>
+              <option value="#F59E0B">Gold (#F59E0B)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('modal-create-admin')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Create Admin</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL: Password Reset Result -->
   <div id="modal-reset-result" class="modal-overlay">
     <div class="modal-box">
@@ -366,7 +409,9 @@
         <button type="button" class="btn btn-primary btn-sm" onclick="closeModal('modal-reset-result')">Done</button>
       </div>
     </div>
-  </div>
+  <footer style="text-align:center; padding: 24px 10px; font-size:0.85rem; color:var(--text-secondary); letter-spacing:1px; border-top:1px solid var(--border-color); margin-top:30px;">
+    Proud Production of BYTESPHERE
+  </footer>
 
   <script src="js/api.js"></script>
   <script src="js/app.js"></script>

@@ -14,7 +14,7 @@ function getOrCreateConversation(userAId, userBId) {
   const db = getDb();
 
   // Check if both users exist
-  const userB = db.prepare("SELECT id, display_name, public_key, status FROM users WHERE id = ? AND status != 'deleted'").get(userBId);
+  const userB = db.prepare("SELECT id, display_name, public_key, role, badge_color, status FROM users WHERE id = ? AND status != 'deleted'").get(userBId);
   if (!userB) {
     const error = new Error('Recipient user does not exist');
     error.statusCode = 404;
@@ -36,6 +36,9 @@ function getOrCreateConversation(userAId, userBId) {
     display_name: u.display_name,
     publicKey: u.public_key,
     public_key: u.public_key,
+    role: u.role,
+    badgeColor: u.badge_color || '#FF9800',
+    badge_color: u.badge_color || '#FF9800',
     status: u.status
   });
 
@@ -83,6 +86,8 @@ function getUserConversations(userId) {
       u.id as recipient_id,
       u.display_name as recipient_name,
       u.public_key as recipient_public_key,
+      u.role as recipient_role,
+      u.badge_color as recipient_badge_color,
       u.status as recipient_status,
       cm.last_read_at
     FROM conversations c
@@ -116,6 +121,9 @@ function getUserConversations(userId) {
         display_name: conv.recipient_name,
         publicKey: conv.recipient_public_key,
         public_key: conv.recipient_public_key,
+        role: conv.recipient_role,
+        badgeColor: conv.recipient_badge_color || '#FF9800',
+        badge_color: conv.recipient_badge_color || '#FF9800',
         status: conv.recipient_status
       },
       lastMessage: lastMsg ? {

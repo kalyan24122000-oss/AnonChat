@@ -37,7 +37,7 @@ function authenticateToken(req, res, next) {
     if (user.status === 'suspended') {
       return res.status(403).json({
         error: 'ACCOUNT_SUSPENDED',
-        message: 'This account has been suspended by an administrator'
+        message: 'Account Suspended / Not Found'
       });
     }
 

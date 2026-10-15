@@ -30,6 +30,7 @@ public class SocketService {
         void onNewMessage(Message message);
         void onMessageStatusUpdate(String messageId, String status);
         void onSubscriptionExpired();
+        void onAccountSuspended();
     }
 
     private MessageListener messageListener;
@@ -135,6 +136,15 @@ public class SocketService {
                 mainHandler.post(() -> {
                     if (messageListener != null) {
                         messageListener.onSubscriptionExpired();
+                    }
+                });
+            });
+
+            // Account suspension push
+            socket.on("account_suspended", args -> {
+                mainHandler.post(() -> {
+                    if (messageListener != null) {
+                        messageListener.onAccountSuspended();
                     }
                 });
             });

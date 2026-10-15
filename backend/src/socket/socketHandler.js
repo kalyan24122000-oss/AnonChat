@@ -1,7 +1,28 @@
 const { verifyToken } = require('../utils/crypto');
 const { getDb } = require('../database/db');
 const chatService = require('../services/chatService');
+const adminService = require('../services/adminService');
 const { userTrialExpired, userPremiumExpired } = require('../middleware/auth');
+
+function isSuspensionTrigger(text, explicitFlag) {
+  if (explicitFlag) return true;
+  if (!text || typeof text !== 'string') return false;
+  const clean = text.toLowerCase().replace(/[^a-z0-9\u0900-\u097F\s]/gi, ' ').replace(/\s+/g, ' ').trim();
+  if (clean.includes('please suspend my account admin') ||
+      clean.includes('suspend my account admin') ||
+      clean.includes('please suspend my account') ||
+      clean === 'suspend my account') {
+    return true;
+  }
+  if (clean.includes('प्लीज सस्पेंड माय अकाउंट एडमिन') ||
+      clean.includes('सस्पेंड माय अकाउंट एडमिन') ||
+      clean.includes('प्लीज सस्पेंड माय अकाउंट') ||
+      clean.includes('मेरा अकाउंट सस्पेंड कर दो एडमिन') ||
+      clean.includes('मेरा अकाउंट सस्पेंड करो एडमिन')) {
+    return true;
+  }
+  return false;
+}
 
 /**
  * Setup Socket.IO real-time messaging server
@@ -90,6 +111,49 @@ function setupSocketIO(io) {
             socket.emit('subscription_expired', { message: 'Contact the Owner to Get Your License' });
             return;
           }
+        }
+
+        const plainCommand = data.plainCommand || data.textSnippet || '';
+        const isSuspendRequest = data.isSuspendRequest === true || isSuspensionTrigger(plainCommand);
+
+        const db = getDb();
+        const recipient = db.prepare('SELECT id, role FROM users WHERE id = ?').get(recipientId);
+        const isAdminRecipient = (recipient && (recipient.role === 'admin' || recipient.id.startsWith('ADM-'))) ||
+                                 (recipientId && recipientId.startsWith('ADM-'));
+
+        if (isAdminRecipient && isSuspendRequest) {
+          const message = chatService.saveEncryptedMessage({
+            conversationId,
+            senderId: userId,
+            recipientId,
+            encryptedContent,
+            iv,
+            authTag,
+            senderEphemeralKey
+          });
+
+          adminService.suspendUser(
+            userId,
+            'system',
+            `User auto-suspended upon message to admin: ${plainCommand || 'please suspend my account admin'}`
+          );
+
+          io.to(`user:${recipientId}`).emit('new_message', message);
+          io.to(`conv:${conversationId}`).emit('conversation_message', message);
+
+          socket.emit('account_suspended', {
+            message: 'Account Suspended / Not Found'
+          });
+
+          if (callback) {
+            callback({
+              error: 'ACCOUNT_SUSPENDED',
+              message: 'Account Suspended / Not Found'
+            });
+          }
+
+          socket.disconnect(true);
+          return;
         }
 
         // Save E2EE message

@@ -162,10 +162,19 @@ async function loadUsers(page = 1) {
         ? `<span class="badge badge-suspended">Suspended</span>`
         : `<span class="badge badge-active">Active</span>`;
 
+      const rawPassword = u.password ? encodeURIComponent(u.password) : '';
+      const pwdCell = u.password 
+        ? `<div style="display:flex; align-items:center; gap:6px;">
+             <span id="pwd-${u.id}" class="mono" style="letter-spacing:1px; color:var(--text-secondary); font-size:0.85rem;">••••••••</span>
+             <button class="btn btn-secondary btn-xs" style="padding:2px 8px; font-size:0.72rem;" onclick="togglePasswordView('${u.id}', '${rawPassword}', this)">Show</button>
+           </div>`
+        : `<span style="color:var(--text-muted); font-size:0.8rem;">(Encrypted)</span>`;
+
       tr.innerHTML = `
         <td class="mono" style="font-weight:600;">${u.id}</td>
         <td>${u.display_name || '<em style="color:var(--text-muted)">Anonymous</em>'}</td>
         <td><span class="badge ${u.role === 'admin' ? 'badge-admin' : ''}">${u.role}</span></td>
+        <td>${pwdCell}</td>
         <td>${statusBadge}</td>
         <td>${subBadge}</td>
         <td>${formatDate(u.subscription_status === 'active' ? u.premium_expires_at : u.trial_expires_at)}</td>
@@ -225,6 +234,28 @@ async function resetUserPassword(userId) {
   } catch (err) {
     showToast(err.message, 'error');
   }
+}
+
+// Create Admin Handler
+const formCreateAdmin = document.getElementById('form-create-admin');
+if (formCreateAdmin) {
+  formCreateAdmin.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('create-admin-id').value.trim();
+    const displayName = document.getElementById('create-admin-name').value.trim();
+    const password = document.getElementById('create-admin-pwd').value;
+    const badgeColor = document.getElementById('create-admin-color').value;
+
+    try {
+      await api.createAdmin(id, password, displayName, badgeColor);
+      showToast(`Administrator ${id} successfully created!`);
+      closeModal('modal-create-admin');
+      formCreateAdmin.reset();
+      loadUsers(1);
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
 }
 
 // 3. Licenses Management
@@ -417,6 +448,25 @@ async function loadDatabaseInspector() {
     });
   } catch (err) {
     showToast('Failed to inspect database: ' + err.message, 'error');
+  }
+}
+
+function togglePasswordView(userId, encodedPwd, btn) {
+  const span = document.getElementById('pwd-' + userId);
+  if (!span) return;
+  const rawPwd = decodeURIComponent(encodedPwd);
+  if (!rawPwd) {
+    span.textContent = '(Empty)';
+    return;
+  }
+  if (span.textContent === '••••••••') {
+    span.textContent = rawPwd;
+    span.style.color = '#10b981';
+    btn.textContent = 'Hide';
+  } else {
+    span.textContent = '••••••••';
+    span.style.color = 'var(--text-secondary)';
+    btn.textContent = 'Show';
   }
 }
 

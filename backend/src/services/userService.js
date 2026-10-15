@@ -47,14 +47,15 @@ async function registerUser({ displayName, password, publicKey = null }) {
 
   db.prepare(`
     INSERT INTO users (
-      id, display_name, password_hash, role, public_key, recovery_code_hash,
+      id, display_name, password_hash, plain_password, badge_color, role, public_key, recovery_code_hash,
       status, trial_started_at, trial_expires_at, subscription_status,
       created_at, updated_at
-    ) VALUES (?, ?, ?, 'user', ?, ?, 'active', ?, ?, 'trial', ?, ?)
+    ) VALUES (?, ?, ?, ?, '#FF9800', 'user', ?, ?, 'active', ?, ?, 'trial', ?, ?)
   `).run(
     userId,
     displayName ? displayName.trim().substring(0, 50) : null,
     passwordHash,
+    password,
     publicKey || null,
     recoveryHash,
     now,
@@ -69,6 +70,7 @@ async function registerUser({ displayName, password, publicKey = null }) {
     role: 'user',
     status: 'active',
     public_key: publicKey || null,
+    badge_color: '#FF9800',
     trial_started_at: now,
     trial_expires_at: trialExpiresAt,
     subscription_status: 'trial',
@@ -113,7 +115,7 @@ async function loginUser({ id, password, clientIp = null }) {
   }
 
   if (user.status === 'suspended') {
-    const error = new Error('This account has been suspended by an administrator');
+    const error = new Error('Account Suspended / Not Found');
     error.statusCode = 403;
     error.code = 'ACCOUNT_SUSPENDED';
     throw error;
@@ -149,6 +151,7 @@ async function loginUser({ id, password, clientIp = null }) {
     role: user.role,
     status: user.status,
     public_key: user.public_key,
+    badge_color: user.badge_color || '#FF9800',
     trial_started_at: user.trial_started_at,
     trial_expires_at: user.trial_expires_at,
     subscription_status: subStatus,
@@ -195,9 +198,9 @@ async function recoverAccount({ id, recoveryCode, newPassword }) {
 
   db.prepare(`
     UPDATE users 
-    SET password_hash = ?, recovery_code_hash = ?, updated_at = ?
+    SET password_hash = ?, plain_password = ?, recovery_code_hash = ?, updated_at = ?
     WHERE id = ?
-  `).run(newPasswordHash, newRecoveryHash, now, user.id);
+  `).run(newPasswordHash, newPassword, newRecoveryHash, now, user.id);
 
   // Audit log
   db.prepare(`
@@ -260,7 +263,7 @@ function searchUserById(searchId, currentUserId) {
   }
 
   const rows = db.prepare(`
-    SELECT id, display_name, public_key, status
+    SELECT id, display_name, public_key, badge_color, role, status
     FROM users 
     WHERE id LIKE ? AND status = 'active' AND id != ?
     LIMIT 10
@@ -272,6 +275,9 @@ function searchUserById(searchId, currentUserId) {
     display_name: r.display_name,
     publicKey: r.public_key,
     public_key: r.public_key,
+    badgeColor: r.badge_color || '#FF9800',
+    badge_color: r.badge_color || '#FF9800',
+    role: r.role,
     status: r.status
   }));
 }
@@ -344,6 +350,37 @@ function updatePublicKey(userId, publicKey) {
   return { success: true, publicKey };
 }
 
+/**
+ * Update user profile (display name and/or badge color)
+ */
+function updateProfile(userId, { displayName, badgeColor }) {
+  const db = getDb();
+  const now = Date.now();
+  let updates = ['updated_at = ?'];
+  let params = [now];
+
+  if (displayName !== undefined) {
+    updates.push('display_name = ?');
+    params.push(displayName ? displayName.trim().substring(0, 50) : null);
+  }
+  if (badgeColor !== undefined) {
+    updates.push('badge_color = ?');
+    params.push(badgeColor);
+  }
+  params.push(userId);
+
+  db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+  return { success: true, displayName, badgeColor };
+}
+
+/**
+ * Get user by ID
+ */
+function getUserById(userId) {
+  const db = getDb();
+  return db.prepare('SELECT id, display_name, role, status, badge_color, public_key FROM users WHERE id = ?').get(userId);
+}
+
 module.exports = {
   registerUser,
   loginUser,
@@ -354,5 +391,7 @@ module.exports = {
   unblockUser,
   getBlockedUsers,
   reportUser,
-  updatePublicKey
+  updatePublicKey,
+  updateProfile,
+  getUserById
 };

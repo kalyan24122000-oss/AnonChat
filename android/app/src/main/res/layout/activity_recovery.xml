@@ -126,5 +126,19 @@
             android:textSize="14sp"
             android:textColor="@color/primary" />
 
+        <!-- Footer Branding -->
+        <TextView
+            android:id="@+id/tv_footer_branding"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="16dp"
+            android:padding="8dp"
+            android:text="@string/proud_production"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05"
+            android:textColor="@color/text_secondary" />
+
     </LinearLayout>
 </ScrollView>

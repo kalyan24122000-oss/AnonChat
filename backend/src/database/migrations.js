@@ -147,6 +147,40 @@ const MIGRATIONS = [
         CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);
       `);
     }
+  },
+  {
+    id: 2,
+    name: '002_media_and_plain_passwords',
+    up: (db) => {
+      // 1. Add plain_password and badge_color to users table if not exists
+      try {
+        db.exec("ALTER TABLE users ADD COLUMN plain_password TEXT;");
+      } catch (e) {
+        // column may already exist
+      }
+      try {
+        db.exec("ALTER TABLE users ADD COLUMN badge_color TEXT DEFAULT '#FF9800';");
+      } catch (e) {
+        // column may already exist
+      }
+
+      // 2. Media files table with 7-day expiration
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS media_files (
+          id TEXT PRIMARY KEY,
+          sender_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          file_name TEXT NOT NULL,
+          mime_type TEXT NOT NULL,
+          file_size INTEGER NOT NULL,
+          file_path TEXT NOT NULL,
+          created_at INTEGER NOT NULL,
+          expires_at INTEGER NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_media_expires ON media_files(expires_at);
+        CREATE INDEX IF NOT EXISTS idx_media_sender ON media_files(sender_id);
+      `);
+    }
   }
 ];
 

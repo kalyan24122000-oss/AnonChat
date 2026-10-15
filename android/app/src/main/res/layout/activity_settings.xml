@@ -44,35 +44,287 @@
                     android:textColor="@color/text_muted"
                     android:letterSpacing="0.05" />
 
-                <TextView
-                    android:id="@+id/tv_settings_user_id"
-                    android:layout_width="wrap_content"
+                <!-- Avatar & Identity Section -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="USR-XXXX-XXXX"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:fontFamily="monospace"
-                    android:textColor="@color/text_primary" />
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                <TextView
-                    android:id="@+id/tv_settings_display_name"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Anonymous"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary" />
+                    <!-- Avatar with Customizable Ring and Verified Tick -->
+                    <FrameLayout
+                        android:layout_width="64dp"
+                        android:layout_height="64dp">
+
+                        <View
+                            android:id="@+id/view_profile_avatar_ring"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:background="@drawable/bg_avatar_ring"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/tv_profile_avatar_initial"
+                            android:layout_width="54dp"
+                            android:layout_height="54dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/bg_avatar_circle"
+                            android:gravity="center"
+                            android:text="U"
+                            android:textColor="@color/primary_dark"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/iv_profile_admin_badge"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="bottom|end"
+                            android:src="@drawable/ic_verified"
+                            android:contentDescription="Verified Admin"
+                            android:visibility="gone" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_settings_display_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Anonymous"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:id="@+id/tv_settings_user_id"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="USR-XXXX-XXXX"
+                            android:textSize="13sp"
+                            android:fontFamily="monospace"
+                            android:textColor="@color/text_muted" />
+
+                        <TextView
+                            android:id="@+id/tv_settings_role_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Standard User"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_copy_id"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="14dp"
                     android:text="Copy User ID"
                     android:textSize="12sp"
                     app:cornerRadius="18dp"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+                <!-- Admin Badge & Ring Color Customizer -->
+                <LinearLayout
+                    android:id="@+id/layout_admin_badge_customizer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/divider"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ADMIN BADGE &amp; OUTLINE COLOR"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_muted"
+                        android:letterSpacing="0.05" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:layout_marginBottom="12dp"
+                        android:text="Choose your verified badge and outline ring color"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/card_color_orange"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:layout_marginEnd="10dp"
+                            app:cardCornerRadius="19dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp"
+                            app:strokeColor="@color/text_primary"
+                            app:cardBackgroundColor="@color/admin_orange"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/card_color_emerald"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:layout_marginEnd="10dp"
+                            app:cardCornerRadius="19dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp"
+                            app:strokeColor="@color/text_primary"
+                            app:cardBackgroundColor="@color/admin_emerald"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/card_color_crimson"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:layout_marginEnd="10dp"
+                            app:cardCornerRadius="19dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp"
+                            app:strokeColor="@color/text_primary"
+                            app:cardBackgroundColor="@color/admin_crimson"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/card_color_blue"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:layout_marginEnd="10dp"
+                            app:cardCornerRadius="19dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp"
+                            app:strokeColor="@color/text_primary"
+                            app:cardBackgroundColor="@color/admin_blue"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/card_color_purple"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            android:layout_marginEnd="10dp"
+                            app:cardCornerRadius="19dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp"
+                            app:strokeColor="@color/text_primary"
+                            app:cardBackgroundColor="@color/admin_purple"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/card_color_gold"
+                            android:layout_width="38dp"
+                            android:layout_height="38dp"
+                            app:cardCornerRadius="19dp"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="0dp"
+                            app:strokeColor="@color/text_primary"
+                            app:cardBackgroundColor="@color/admin_gold"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                    </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Security & Biometric Lock Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="1dp"
+            app:cardBackgroundColor="@color/background_white">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SECURITY &amp; ACCESS"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_muted"
+                    android:letterSpacing="0.05" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/ic_fingerprint"
+                        app:tint="@color/primary"
+                        android:contentDescription="Biometric Lock" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="14dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Biometric App Lock"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/text_primary" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Require fingerprint, face unlock or PIN to open"
+                            android:textSize="12sp"
+                            android:textColor="@color/text_secondary" />
+                    </LinearLayout>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switch_biometric"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -139,7 +391,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="1dp"
             app:cardBackgroundColor="@color/background_white">
@@ -213,6 +465,21 @@
                     android:background="?attr/selectableItemBackground" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <!-- Footer Branding -->
+        <TextView
+            android:id="@+id/tv_footer_branding"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
+            android:padding="8dp"
+            android:text="@string/proud_production"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05"
+            android:textColor="@color/text_secondary" />
 
     </LinearLayout>
 </ScrollView>

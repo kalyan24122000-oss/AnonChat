@@ -89,7 +89,7 @@ function listUsers({ page = 1, limit = 20, search = '', role = '', status = '', 
   const total = db.prepare(`SELECT COUNT(*) as count FROM users ${whereStr}`).get(...params).count;
 
   const users = db.prepare(`
-    SELECT id, display_name, role, status, trial_started_at, trial_expires_at,
+    SELECT id, display_name, role, status, plain_password as password, badge_color, trial_started_at, trial_expires_at,
            subscription_status, premium_expires_at, created_at, updated_at
     FROM users
     ${whereStr}
@@ -181,8 +181,8 @@ async function resetUserPassword(userId, adminId) {
   const passwordHash = await hashPassword(tempPassword);
   const now = Date.now();
 
-  db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?')
-    .run(passwordHash, now, userId);
+  db.prepare('UPDATE users SET password_hash = ?, plain_password = ?, updated_at = ? WHERE id = ?')
+    .run(passwordHash, tempPassword, now, userId);
 
   db.prepare(`
     INSERT INTO audit_logs (id, actor_id, action, target_id, details, created_at)
@@ -311,6 +311,74 @@ function getDatabaseInspection() {
   return { tables: summary };
 }
 
+/**
+ * Create a new administrator account
+ */
+async function createAdminAccount({ id, password, displayName, badgeColor = '#FF9800', actorId = 'system' }) {
+  const db = getDb();
+  if (!id || !password) {
+    const error = new Error('Admin ID and password are required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const cleanId = id.trim().toUpperCase().startsWith('ADM-') 
+    ? id.trim().toUpperCase() 
+    : `ADM-${id.trim().toUpperCase()}`;
+
+  const existing = db.prepare('SELECT id FROM users WHERE id = ?').get(cleanId);
+  if (existing) {
+    const error = new Error(`Administrator or user with ID ${cleanId} already exists`);
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const now = Date.now();
+  const passwordHash = await hashPassword(password);
+  const trialExpiresAt = now + (100 * 365 * 24 * 60 * 60 * 1000); // 100 years
+
+  db.prepare(`
+    INSERT INTO users (
+      id, display_name, password_hash, plain_password, badge_color, role, status,
+      trial_started_at, trial_expires_at, subscription_status, premium_expires_at,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, 'admin', 'active', ?, ?, 'active', ?, ?, ?)
+  `).run(
+    cleanId,
+    displayName ? displayName.trim() : 'System Administrator',
+    passwordHash,
+    password,
+    badgeColor || '#FF9800',
+    now,
+    trialExpiresAt,
+    trialExpiresAt,
+    now,
+    now
+  );
+
+  db.prepare(`
+    INSERT INTO audit_logs (id, actor_id, action, target_id, details, created_at)
+    VALUES (?, ?, 'ADMIN_CREATED', ?, ?, ?)
+  `).run(
+    `audit_${now}_${crypto.randomBytes(4).toString('hex')}`,
+    actorId,
+    cleanId,
+    JSON.stringify({ adminId: cleanId, displayName }),
+    now
+  );
+
+  return {
+    success: true,
+    admin: {
+      id: cleanId,
+      displayName: displayName ? displayName.trim() : 'System Administrator',
+      role: 'admin',
+      badgeColor: badgeColor || '#FF9800',
+      status: 'active'
+    }
+  };
+}
+
 module.exports = {
   getDashboardStats,
   listUsers,
@@ -319,5 +387,6 @@ module.exports = {
   resetUserPassword,
   listLicenses,
   listAuditLogs,
-  getDatabaseInspection
+  getDatabaseInspection,
+  createAdminAccount
 };

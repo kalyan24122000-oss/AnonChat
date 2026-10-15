@@ -77,4 +77,45 @@ public class Message {
 
     public String getPlaintext() { return plaintext; }
     public void setPlaintext(String plaintext) { this.plaintext = plaintext; }
+
+    public boolean isMedia() {
+        return plaintext != null && (plaintext.startsWith("[MEDIA:IMAGE:") || plaintext.startsWith("[MEDIA:VIDEO:"));
+    }
+
+    public boolean isImage() {
+        return plaintext != null && plaintext.startsWith("[MEDIA:IMAGE:");
+    }
+
+    public boolean isVideo() {
+        return plaintext != null && plaintext.startsWith("[MEDIA:VIDEO:");
+    }
+
+    public String getMediaUrl() {
+        if (!isMedia()) return null;
+        String[] parts = plaintext.substring(1, plaintext.length() - 1).split(":");
+        return parts.length >= 3 ? parts[2] : null;
+    }
+
+    public String getMediaDownloadUrl() {
+        if (!isMedia()) return null;
+        String[] parts = plaintext.substring(1, plaintext.length() - 1).split(":");
+        return parts.length >= 4 ? parts[3] : getMediaUrl();
+    }
+
+    public String getMediaFileName() {
+        if (!isMedia()) return "Media";
+        String[] parts = plaintext.substring(1, plaintext.length() - 1).split(":");
+        return parts.length >= 5 ? parts[4] : "Media File";
+    }
+
+    public long getMediaExpiresAt() {
+        if (!isMedia()) return 0;
+        String[] parts = plaintext.substring(1, plaintext.length() - 1).split(":");
+        if (parts.length >= 6) {
+            try {
+                return Long.parseLong(parts[5]);
+            } catch (Exception ignored) {}
+        }
+        return createdAt + (7L * 24 * 3600 * 1000);
+    }
 }

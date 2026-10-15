@@ -31,10 +31,19 @@ public class Conversation {
         @SerializedName("status")
         private String status;
 
+        @SerializedName("role")
+        private String role;
+
+        @SerializedName(value = "badge_color", alternate = {"badgeColor"})
+        private String badgeColor;
+
         public String getId() { return id; }
         public String getDisplayName() { return displayName; }
         public String getPublicKey() { return publicKey; }
         public String getStatus() { return status; }
+        public String getRole() { return role; }
+        public String getBadgeColor() { return badgeColor != null && !badgeColor.isEmpty() ? badgeColor : "#FF9800"; }
+        public boolean isAdmin() { return "admin".equalsIgnoreCase(role) || (id != null && id.startsWith("ADM-")); }
     }
 
     public static class LastMessage {

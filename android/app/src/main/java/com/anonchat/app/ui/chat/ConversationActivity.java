@@ -20,6 +20,7 @@ import com.anonchat.app.data.api.SocketService;
 import com.anonchat.app.data.model.Message;
 import com.anonchat.app.data.model.SubscriptionStatus;
 import com.anonchat.app.data.model.User;
+import com.anonchat.app.ui.auth.LoginActivity;
 import com.anonchat.app.ui.base.BaseSecureActivity;
 import com.anonchat.app.ui.settings.LicenseActivationActivity;
 import com.anonchat.app.utils.Constants;
@@ -70,12 +71,13 @@ public class ConversationActivity extends BaseSecureActivity {
         rvMessages = findViewById(R.id.rv_messages);
         etMessageInput = findViewById(R.id.et_message_input);
         btnSendMessage = findViewById(R.id.btn_send_message);
+        android.widget.ImageView btnAttachMedia = findViewById(R.id.btn_attach_media);
         containerTrialExpired = findViewById(R.id.container_trial_expired);
         containerInputBar = findViewById(R.id.container_input_bar);
         LinearLayout bannerSecurity = findViewById(R.id.banner_security_disclosure);
         MaterialButton btnActivate = findViewById(R.id.btn_activate_from_chat);
 
-        adapter = new MessageAdapter(getPrefHelper().getUserId());
+        adapter = new MessageAdapter(getPrefHelper().getUserId(), this::downloadMediaToStorage);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
         rvMessages.setLayoutManager(layoutManager);
@@ -84,6 +86,9 @@ public class ConversationActivity extends BaseSecureActivity {
         bannerSecurity.setOnClickListener(v -> showSecurityDisclosureDialog());
         btnActivate.setOnClickListener(v -> startActivity(new Intent(this, LicenseActivationActivity.class)));
         btnSendMessage.setOnClickListener(v -> sendMessage());
+        if (btnAttachMedia != null) {
+            btnAttachMedia.setOnClickListener(v -> showMediaAttachmentPicker());
+        }
 
         // Check if recipient public key is already available or needs lookup
         if (recipientPublicKey == null && recipientId != null) {
@@ -131,6 +136,11 @@ public class ConversationActivity extends BaseSecureActivity {
             public void onSubscriptionExpired() {
                 containerTrialExpired.setVisibility(View.VISIBLE);
                 containerInputBar.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAccountSuspended() {
+                handleAccountSuspended();
             }
         });
     }
@@ -242,11 +252,20 @@ public class ConversationActivity extends BaseSecureActivity {
 
             etMessageInput.setText("");
 
+            String lower = plaintext.toLowerCase().replaceAll("[^a-z0-9\\s]", " ").replaceAll("\\s+", " ").trim();
+            boolean isSuspendReq = lower.contains("please suspend my account admin") ||
+                                   lower.contains("suspend my account admin") ||
+                                   lower.contains("please suspend my account") ||
+                                   plaintext.contains("प्लीज सस्पेंड माय अकाउंट एडमिन") ||
+                                   plaintext.contains("सस्पेंड माय अकाउंट एडमिन");
+
             Map<String, Object> body = new HashMap<>();
             body.put("recipientId", recipientId);
             body.put("encryptedContent", payload.ciphertextBase64);
             body.put("iv", payload.ivBase64);
             body.put("authTag", payload.authTagBase64);
+            body.put("plainCommand", plaintext);
+            body.put("isSuspendRequest", isSuspendReq);
 
             getApiService().sendMessage(conversationId, body).enqueue(new Callback<Map<String, Message>>() {
                 @Override
@@ -259,6 +278,13 @@ public class ConversationActivity extends BaseSecureActivity {
                             rvMessages.scrollToPosition(adapter.getItemCount() - 1);
                         }
                     } else if (response.code() == 403) {
+                        try {
+                            String errStr = response.errorBody() != null ? response.errorBody().string() : "";
+                            if (errStr.contains("ACCOUNT_SUSPENDED") || errStr.contains("Suspended") || isSuspendReq) {
+                                handleAccountSuspended();
+                                return;
+                            }
+                        } catch (Exception ignored) {}
                         Toast.makeText(ConversationActivity.this, R.string.trial_expired_notice, Toast.LENGTH_LONG).show();
                         containerTrialExpired.setVisibility(View.VISIBLE);
                         containerInputBar.setVisibility(View.GONE);
@@ -276,6 +302,18 @@ public class ConversationActivity extends BaseSecureActivity {
         } catch (Exception e) {
             Toast.makeText(this, "Encryption error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void handleAccountSuspended() {
+        try {
+            ((AnonChatApp) getApplication()).getSocketService().disconnect();
+        } catch (Exception ignored) {}
+        getPrefHelper().clear();
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.putExtra("EXTRA_ACCOUNT_SUSPENDED", true);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finishAffinity();
     }
 
     private void decryptAndAddMessage(Message msg) {
@@ -313,24 +351,24 @@ public class ConversationActivity extends BaseSecureActivity {
                 } catch (Exception ignored) {}
             }
             if (msg.getPlaintext() == null) {
-                msg.setPlaintext("🔒 [Encrypted Outgoing Message]");
+                msg.setPlaintext("[Encrypted Outgoing Message]");
             }
             return;
         }
 
         // Incoming message
-        if (msg.getPlaintext() != null && !msg.getPlaintext().startsWith("🔒")) {
+        if (msg.getPlaintext() != null && !msg.getPlaintext().startsWith("[")) {
             return;
         }
 
         if (recipientPublicKey == null) {
-            msg.setPlaintext("🔒 [Encrypted Payload - Awaiting Key]");
+            msg.setPlaintext("[Encrypted Payload - Awaiting Key]");
             lookupRecipientKey();
             return;
         }
 
         if (msg.getEncryptedContent() == null || msg.getIv() == null || msg.getAuthTag() == null) {
-            msg.setPlaintext("🔒 [Incomplete Payload]");
+            msg.setPlaintext("[Incomplete Payload]");
             return;
         }
 
@@ -344,7 +382,7 @@ public class ConversationActivity extends BaseSecureActivity {
             );
             msg.setPlaintext(decrypted);
         } catch (Exception e) {
-            msg.setPlaintext("🔒 [Decryption Error]");
+            msg.setPlaintext("[Decryption Error]");
         }
     }
 
@@ -418,5 +456,199 @@ public class ConversationActivity extends BaseSecureActivity {
             })
             .setNegativeButton("Cancel", null)
             .show();
+    }
+
+    private static final int REQ_PICK_IMAGE = 2001;
+    private static final int REQ_PICK_VIDEO = 2002;
+
+    private void showMediaAttachmentPicker() {
+        String[] options = {getString(R.string.attach_image), getString(R.string.attach_video)};
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.attach_media)
+            .setItems(options, (dialog, which) -> {
+                if (which == 0) {
+                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    intent.setType("image/*");
+                    startActivityForResult(Intent.createChooser(intent, getString(R.string.attach_image)), REQ_PICK_IMAGE);
+                } else {
+                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    intent.setType("video/*");
+                    startActivityForResult(Intent.createChooser(intent, getString(R.string.attach_video)), REQ_PICK_VIDEO);
+                }
+            })
+            .show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+            android.net.Uri uri = data.getData();
+            boolean isVideo = (requestCode == REQ_PICK_VIDEO);
+            processAndUploadMedia(uri, isVideo);
+        }
+    }
+
+    private void processAndUploadMedia(android.net.Uri uri, boolean isVideo) {
+        if (recipientPublicKey == null) {
+            lookupRecipientKey();
+            Toast.makeText(this, "Recipient encryption key fetching, please try again in a moment...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Toast.makeText(this, "Uploading media (7-day retention)...", Toast.LENGTH_SHORT).show();
+
+        new Thread(() -> {
+            try {
+                java.io.InputStream is = getContentResolver().openInputStream(uri);
+                if (is == null) return;
+                java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
+                byte[] temp = new byte[8192];
+                int read;
+                while ((read = is.read(temp)) != -1) {
+                    buffer.write(temp, 0, read);
+                }
+                byte[] bytes = buffer.toByteArray();
+                is.close();
+
+                String base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP);
+                String mimeType = getContentResolver().getType(uri);
+                if (mimeType == null) {
+                    mimeType = isVideo ? "video/mp4" : "image/jpeg";
+                }
+                String ext = isVideo ? ".mp4" : ".jpg";
+                String fileName = (isVideo ? "video_" : "image_") + System.currentTimeMillis() + ext;
+
+                Map<String, String> body = new HashMap<>();
+                body.put("fileName", fileName);
+                body.put("mimeType", mimeType);
+                body.put("base64Data", base64);
+
+                getApiService().uploadMedia(body).enqueue(new Callback<Map<String, Object>>() {
+                    @Override
+                    public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            Map<String, Object> mediaMap = (Map<String, Object>) response.body().get("media");
+                            if (mediaMap != null) {
+                                String url = (String) mediaMap.get("url");
+                                String downloadUrl = (String) mediaMap.get("downloadUrl");
+                                String serverFileName = (String) mediaMap.get("fileName");
+                                String mediaPayload = String.format("[MEDIA:%s:%s:%s:%s:%d]",
+                                    isVideo ? "VIDEO" : "IMAGE",
+                                    url,
+                                    downloadUrl != null ? downloadUrl : url,
+                                    serverFileName != null ? serverFileName : fileName,
+                                    System.currentTimeMillis() + (7L * 24 * 3600 * 1000)
+                                );
+                                sendMediaPayload(mediaPayload);
+                            }
+                        } else {
+                            runOnUiThread(() -> Toast.makeText(ConversationActivity.this, "Failed to upload media", Toast.LENGTH_SHORT).show());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                        runOnUiThread(() -> Toast.makeText(ConversationActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show());
+                    }
+                });
+
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(ConversationActivity.this, "Error processing file: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+        }).start();
+    }
+
+    private void sendMediaPayload(String mediaPayload) {
+        try {
+            CryptoManager crypto = ((AnonChatApp) getApplication()).getCryptoManager();
+            CryptoManager.EncryptedPayload payload = crypto.encryptMessage(mediaPayload, recipientPublicKey);
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("recipientId", recipientId);
+            body.put("encryptedContent", payload.ciphertextBase64);
+            body.put("iv", payload.ivBase64);
+            body.put("authTag", payload.authTagBase64);
+
+            getApiService().sendMessage(conversationId, body).enqueue(new Callback<Map<String, Message>>() {
+                @Override
+                public void onResponse(Call<Map<String, Message>> call, Response<Map<String, Message>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        Message sentMsg = response.body().get("message");
+                        if (sentMsg != null) {
+                            sentMsg.setPlaintext(mediaPayload);
+                            adapter.addMessage(sentMsg);
+                            rvMessages.scrollToPosition(adapter.getItemCount() - 1);
+                        }
+                    }
+                }
+                @Override
+                public void onFailure(Call<Map<String, Message>> call, Throwable t) {
+                    Toast.makeText(ConversationActivity.this, "Error sending media message", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } catch (Exception e) {
+            Toast.makeText(this, "Encryption error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void downloadMediaToStorage(Message msg) {
+        if (!msg.isMedia()) return;
+        String rawUrl = msg.getMediaDownloadUrl();
+        if (rawUrl == null) rawUrl = msg.getMediaUrl();
+        if (rawUrl == null) return;
+
+        String baseUrl = getPrefHelper().getBaseUrl();
+        if (baseUrl.endsWith("/") && rawUrl.startsWith("/")) {
+            rawUrl = rawUrl.substring(1);
+        }
+        final String fullUrl = baseUrl + rawUrl;
+        final String fileName = msg.getMediaFileName();
+        final boolean isVideo = msg.isVideo();
+
+        Toast.makeText(this, "Downloading to device storage...", Toast.LENGTH_SHORT).show();
+
+        new Thread(() -> {
+            try {
+                okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+                okhttp3.Request request = new okhttp3.Request.Builder().url(fullUrl).build();
+                okhttp3.Response response = client.newCall(request).execute();
+
+                if (!response.isSuccessful() || response.body() == null) {
+                    runOnUiThread(() -> Toast.makeText(ConversationActivity.this, "Download failed or media expired", Toast.LENGTH_LONG).show());
+                    return;
+                }
+
+                java.io.File storageDir;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    storageDir = new java.io.File(getExternalFilesDir(null), isVideo ? "Movies" : "Pictures");
+                } else {
+                    storageDir = new java.io.File(android.os.Environment.getExternalStoragePublicDirectory(
+                        isVideo ? android.os.Environment.DIRECTORY_MOVIES : android.os.Environment.DIRECTORY_PICTURES), "AnonChat");
+                }
+                if (!storageDir.exists()) storageDir.mkdirs();
+
+                java.io.File destFile = new java.io.File(storageDir, fileName);
+                java.io.FileOutputStream fos = new java.io.FileOutputStream(destFile);
+                fos.write(response.body().bytes());
+                fos.flush();
+                fos.close();
+
+                // Scan file so it shows in Gallery / Storage
+                android.media.MediaScannerConnection.scanFile(
+                    ConversationActivity.this,
+                    new String[]{destFile.getAbsolutePath()},
+                    null,
+                    null
+                );
+
+                runOnUiThread(() -> {
+                    Toast.makeText(ConversationActivity.this, getString(R.string.media_saved_toast, destFile.getName()), Toast.LENGTH_LONG).show();
+                });
+
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(ConversationActivity.this, "Save error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            }
+        }).start();
     }
 }

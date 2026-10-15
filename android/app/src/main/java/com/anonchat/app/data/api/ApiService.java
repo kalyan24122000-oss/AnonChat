@@ -81,4 +81,11 @@ public interface ApiService {
 
     @POST("api/license/redeem")
     Call<RedeemResponse> redeemLicense(@Body Map<String, String> body);
+
+    // Media Upload (Images & Videos with 7-Day Auto Deletion)
+    @POST("api/chat/media/upload")
+    Call<Map<String, Object>> uploadMedia(@Body Map<String, String> body);
+
+    @PUT("api/users/profile")
+    Call<Map<String, Object>> updateProfile(@Body Map<String, Object> body);
 }

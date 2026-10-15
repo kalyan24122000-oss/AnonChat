@@ -33,6 +33,9 @@ public class User {
     @SerializedName(value = "created_at", alternate = {"createdAt"})
     private long createdAt;
 
+    @SerializedName(value = "badge_color", alternate = {"badgeColor"})
+    private String badgeColor;
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -41,6 +44,16 @@ public class User {
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+
+    public boolean isAdmin() {
+        return "admin".equalsIgnoreCase(role) || (id != null && id.startsWith("ADM-"));
+    }
+
+    public String getBadgeColor() {
+        return badgeColor != null && !badgeColor.isEmpty() ? badgeColor : "#FF9800";
+    }
+
+    public void setBadgeColor(String badgeColor) { this.badgeColor = badgeColor; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

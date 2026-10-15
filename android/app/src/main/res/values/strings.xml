@@ -50,4 +50,31 @@
     <string name="unblock_user">Unblock User</string>
     <string name="report_user">Report User</string>
     <string name="copied">Copied to clipboard</string>
+
+    <!-- Branding -->
+    <string name="proud_production">Proud Production of BYTESPHERE</string>
+    <string name="tab_chats">CHATS</string>
+    <string name="tab_calls">CALLS</string>
+    <string name="call_info_secure">End-to-end encrypted voice &amp; video</string>
+    <string name="start_call">Start Encrypted Call</string>
+    <string name="no_calls_title">No Recent Calls</string>
+    <string name="no_calls_sub">Encrypted one-to-one calls with cryptographic IDs will appear here.</string>
+
+    <!-- Biometric & Admin Customization -->
+    <string name="biometric_title">Biometric App Lock</string>
+    <string name="biometric_subtitle">Require Fingerprint or Face ID to open app</string>
+    <string name="biometric_prompt_msg">Unlock AnonChat with Biometrics</string>
+    <string name="admin_badge_color_title">Admin Profile Badge &amp; Ring Color</string>
+
+    <!-- Media Images & Videos -->
+    <string name="attach_media">Attach Media</string>
+    <string name="attach_image">Send Image</string>
+    <string name="attach_video">Send Video</string>
+    <string name="media_retention_badge">7-Day Retention</string>
+    <string name="media_download_action">Save to Storage</string>
+    <string name="media_saved_toast">Saved to device storage: %1$s</string>
+
+    <!-- Account Suspension -->
+    <string name="account_suspended_title">Account Suspended / Not Found</string>
+    <string name="account_suspended_message">This account has been suspended or is not found on the secure network. Access is denied.</string>
 </resources>

@@ -54,7 +54,9 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
+        private final View viewAvatarRing;
         private final TextView tvAvatarInitial;
+        private final android.widget.ImageView ivAdminBadge;
         private final TextView tvConvName;
         private final TextView tvConvTime;
         private final TextView tvConvLastMsg;
@@ -62,7 +64,9 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            viewAvatarRing = itemView.findViewById(R.id.view_avatar_ring);
             tvAvatarInitial = itemView.findViewById(R.id.tv_avatar_initial);
+            ivAdminBadge = itemView.findViewById(R.id.iv_admin_badge);
             tvConvName = itemView.findViewById(R.id.tv_conv_name);
             tvConvTime = itemView.findViewById(R.id.tv_conv_time);
             tvConvLastMsg = itemView.findViewById(R.id.tv_conv_last_msg);
@@ -81,10 +85,27 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
             String initial = !displayName.isEmpty() ? String.valueOf(displayName.charAt(0)).toUpperCase() : "U";
             tvAvatarInitial.setText(initial);
 
+            // Admin badge and outline ring
+            boolean isAdmin = conv.getRecipient() != null && conv.getRecipient().isAdmin();
+            if (isAdmin) {
+                viewAvatarRing.setVisibility(View.VISIBLE);
+                ivAdminBadge.setVisibility(View.VISIBLE);
+                try {
+                    String colorStr = conv.getRecipient().getBadgeColor();
+                    int color = android.graphics.Color.parseColor(colorStr);
+                    android.graphics.drawable.GradientDrawable ring = (android.graphics.drawable.GradientDrawable) viewAvatarRing.getBackground().mutate();
+                    ring.setStroke((int) (2.5f * itemView.getResources().getDisplayMetrics().density), color);
+                    ivAdminBadge.setColorFilter(color);
+                } catch (Exception ignored) {}
+            } else {
+                viewAvatarRing.setVisibility(View.GONE);
+                ivAdminBadge.setVisibility(View.GONE);
+            }
+
             // Last message snippet & timestamp
             if (conv.getLastMessage() != null) {
                 tvConvTime.setText(DateFormatter.formatConversationTime(conv.getLastMessage().getTimestamp()));
-                tvConvLastMsg.setText("🔒 Encrypted Message");
+                tvConvLastMsg.setText("Encrypted message");
             } else {
                 tvConvTime.setText(DateFormatter.formatConversationTime(conv.getUpdatedAt()));
                 tvConvLastMsg.setText("Start secure conversation");

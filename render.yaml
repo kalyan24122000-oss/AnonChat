@@ -6,6 +6,8 @@ services:
     buildCommand: npm install && cd backend && npm install
     startCommand: node backend/src/server.js
     envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
       - key: NODE_ENV
         value: production
       - key: JWT_SECRET

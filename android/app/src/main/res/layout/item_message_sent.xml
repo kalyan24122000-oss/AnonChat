@@ -28,6 +28,88 @@
             android:textSize="15sp"
             android:textColor="@color/text_primary" />
 
+        <!-- Media Card Container for Images & Videos -->
+        <LinearLayout
+            android:id="@+id/container_media"
+            android:layout_width="220dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_media_card"
+            android:padding="8dp"
+            android:visibility="gone">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="130dp">
+
+                <ImageView
+                    android:id="@+id/iv_media_thumbnail"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_image"
+                    android:contentDescription="Media Preview" />
+
+                <ImageView
+                    android:id="@+id/iv_video_play_badge"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_video"
+                    android:background="@drawable/bg_badge_trial"
+                    android:padding="10dp"
+                    android:visibility="gone"
+                    android:contentDescription="Play Video" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tv_media_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="image.jpg"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:singleLine="true"
+                android:ellipsize="middle" />
+
+            <TextView
+                android:id="@+id/tv_media_expiry_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Auto-deletes in 7 days"
+                android:textSize="10sp"
+                android:textColor="@color/danger"
+                android:textStyle="italic" />
+
+            <LinearLayout
+                android:id="@+id/btn_media_download"
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_badge_premium"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_download"
+                    android:contentDescription="Download" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="Save to Storage"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary_dark" />
+            </LinearLayout>
+        </LinearLayout>
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
