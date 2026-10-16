@@ -13,17 +13,19 @@ async function startServer() {
     console.log('[AnonChat] Initializing database migrations...');
     runMigrations();
 
-    console.log('[AnonChat] Running database seeds...');
-    await runSeeds();
-
-    // Restore persistent data from Supabase PostgreSQL (survives Render ephemeral shutdowns)
+    // Initialize and restore persistent data from Render PostgreSQL Cloud (survives Render restarts)
     try {
-      const { pullFromSupabase } = require('./database/cloudSync');
+      const { initPostgresSchema } = require('./database/initPostgres');
+      await initPostgresSchema();
+      const { pullFromCloud } = require('./database/cloudSync');
       const { getDb } = require('./database/db');
-      await pullFromSupabase(getDb());
+      await pullFromCloud(getDb());
     } catch (syncErr) {
-      console.warn('[AnonChat] Supabase initial pull warning:', syncErr.message);
+      console.warn('[AnonChat] Render PostgreSQL initial sync warning:', syncErr.message);
     }
+
+    console.log('[AnonChat] Running database seeds for any missing defaults...');
+    await runSeeds();
 
     const server = http.createServer(app);
 

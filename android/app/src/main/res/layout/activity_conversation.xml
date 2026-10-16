@@ -13,7 +13,7 @@
         android:layout_height="0dp"
         android:visibility="gone" />
 
-    <!-- 1. Top Header Bar: Back Button + Recipient Avatar + Name/Status + Call Button -->
+    <!-- 1. Top Modern Chatbot Header Bar -->
     <LinearLayout
         android:id="@+id/ll_chat_custom_header"
         android:layout_width="match_parent"
@@ -22,9 +22,9 @@
         android:gravity="center_vertical"
         android:paddingStart="14dp"
         android:paddingEnd="16dp"
-        android:background="@color/dark_background">
+        android:background="#131926">
 
-        <!-- Back Button (Circular Dark Neumorphic Button) -->
+        <!-- Back Button (Circular Dark Button) -->
         <FrameLayout
             android:id="@+id/btn_chat_back"
             android:layout_width="38dp"
@@ -44,24 +44,24 @@
 
         <!-- Recipient Circular Avatar -->
         <FrameLayout
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_marginStart="10dp">
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginStart="12dp">
 
             <TextView
                 android:id="@+id/tv_chat_avatar_initial"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_gravity="center"
                 android:background="@drawable/bg_avatar_circle"
                 android:gravity="center"
-                android:text="U"
+                android:text="P"
                 android:textColor="#FFFFFF"
-                android:textSize="17sp"
+                android:textSize="16sp"
                 android:textStyle="bold" />
         </FrameLayout>
 
-        <!-- Recipient Name -->
+        <!-- Recipient Name & Status -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -74,67 +74,93 @@
                 android:id="@+id/tv_chat_recipient_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Kathy Gomez"
+                android:text="Prime Encrypted Chat"
                 android:textColor="#FFFFFF"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:singleLine="true"
                 android:ellipsize="end" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="2dp">
+
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/bg_unread_pill"
+                    android:backgroundTint="#10B981" />
+
+                <TextView
+                    android:id="@+id/tv_chat_status_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:text="Online • E2EE Encrypted"
+                    android:textColor="#10B981"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
         </LinearLayout>
+
+        <!-- Shield Security Info Action -->
+        <FrameLayout
+            android:id="@+id/banner_security_disclosure"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_circle_button_dark"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_lock"
+                app:tint="#6366F1"
+                android:contentDescription="Security Info" />
+        </FrameLayout>
     </LinearLayout>
 
-    <!-- Subtle Security Notice (Sleek Dark Pill) -->
+    <!-- Subtle Privacy / E2EE Info Strip -->
     <LinearLayout
-        android:id="@+id/banner_security_disclosure"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="#1B1D22"
+        android:background="#0E131F"
         android:paddingTop="5dp"
         android:paddingBottom="5dp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:gravity="center_vertical"
-        android:clickable="true"
-        android:focusable="true">
+        android:gravity="center">
 
         <ImageView
-            android:layout_width="14dp"
-            android:layout_height="14dp"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
             android:src="@drawable/ic_lock"
-            app:tint="#FF4D4D"
+            app:tint="#06B6D4"
             android:contentDescription="Shield" />
 
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:text="Curve25519 E2EE &amp; 7-Day Auto-Purge Protected"
-            android:textSize="11sp"
-            android:textColor="#9CA3AF" />
+            android:layout_marginStart="6dp"
+            android:text="NIST P-256 E2EE • Zero-Knowledge • 7-Day Purge"
+            android:textSize="10sp"
+            android:textColor="#64748B" />
     </LinearLayout>
 
-    <!-- Date Divider Chip: "Today" -->
-    <TextView
-        android:id="@+id/tv_date_chip"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="4dp"
-        android:text="Today"
-        android:textSize="12sp"
-        android:textColor="#6B7280" />
-
-    <!-- 2. Message History List -->
+    <!-- 2. Message History Stream -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_messages"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
-        android:paddingTop="6dp"
+        android:paddingTop="8dp"
         android:paddingBottom="10dp"
         android:background="@color/dark_background" />
 
@@ -165,120 +191,101 @@
             android:layout_marginTop="10dp"
             android:text="@string/activate_license_btn"
             android:textAllCaps="false"
-            app:backgroundTint="#FF4D4D"
+            app:backgroundTint="#6366F1"
             app:cornerRadius="20dp" />
     </LinearLayout>
 
-    <!-- 3. Floating Bottom Message Input Bar (Matching Screen 2) -->
+    <!-- 3. Modern Floating Chatbot Prompt Bar -->
     <LinearLayout
         android:id="@+id/container_input_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:orientation="vertical"
         android:paddingStart="14dp"
         android:paddingEnd="14dp"
         android:paddingBottom="12dp"
         android:paddingTop="6dp"
         android:background="@color/dark_background">
 
-        <!-- Dark Rounded Pill Input Box -->
+        <!-- Modern Rounded Floating Input Pill -->
         <LinearLayout
             android:id="@+id/ll_input_box"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="50dp"
             android:background="@drawable/bg_input_rounded"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp">
+            android:paddingStart="10dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp">
 
-            <!-- Emoji Button -->
-            <ImageView
-                android:id="@+id/btn_emoji"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="5dp"
-                android:src="@drawable/ic_mood"
-                app:tint="#FF4D4D"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Emoji" />
-
-            <!-- Text Input -->
-            <EditText
-                android:id="@+id/et_message_input"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:layout_marginEnd="6dp"
-                android:background="@null"
-                android:hint="@string/type_message_hint"
-                android:textColorHint="#6B7280"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:singleLine="true" />
-
-            <!-- Paperclip Media Attachment -->
+            <!-- Attach Media / Image Button (+) -->
             <ImageView
                 android:id="@+id/btn_attach_media"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:padding="5dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:padding="7dp"
                 android:src="@drawable/ic_attach"
-                app:tint="#9CA3AF"
+                app:tint="#94A3B8"
                 android:clickable="true"
                 android:focusable="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Attach Image or Video" />
 
-            <!-- Camera Capture Button -->
-            <ImageView
-                android:id="@+id/btn_camera_capture"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginStart="4dp"
-                android:padding="5dp"
-                android:src="@drawable/ic_camera"
-                app:tint="#FF4D4D"
+            <!-- Clean Text Input Field -->
+            <EditText
+                android:id="@+id/et_message_input"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="@null"
+                android:hint="Message..."
+                android:textColorHint="#64748B"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:maxLines="4" />
+
+            <!-- Circular Send Button -->
+            <FrameLayout
+                android:id="@+id/btn_send_container"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_circle_button_coral"
+                android:backgroundTint="@color/primary"
                 android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Camera" />
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/iv_send_icon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_send"
+                    app:tint="#FFFFFF"
+                    android:contentDescription="@string/send" />
+
+                <!-- Hidden FAB for backward compatibility -->
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btn_send_message"
+                    android:layout_width="1dp"
+                    android:layout_height="1dp"
+                    android:visibility="gone"
+                    android:contentDescription="@string/send" />
+            </FrameLayout>
         </LinearLayout>
 
-        <!-- Large Floating Send / Mic Button (Coral Red) -->
-        <FrameLayout
-            android:id="@+id/btn_send_container"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_circle_button_coral"
-            android:clickable="true"
-            android:focusable="true">
-
-            <ImageView
-                android:id="@+id/iv_send_icon"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_gravity="center"
-                android:layout_marginStart="2dp"
-                android:src="@drawable/ic_send"
-                app:tint="#FFFFFF"
-                android:contentDescription="@string/send" />
-
-            <!-- Hidden FAB to maintain exact backward compatibility -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/btn_send_message"
-                android:layout_width="1dp"
-                android:layout_height="1dp"
-                android:visibility="gone"
-                android:contentDescription="@string/send" />
-        </FrameLayout>
-
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="6dp"
+            android:text="Messages are protected by Curve25519 &amp; auto-purge"
+            android:textSize="10sp"
+            android:textColor="#475569" />
     </LinearLayout>
 
 </LinearLayout>

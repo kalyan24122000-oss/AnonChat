@@ -19,20 +19,16 @@ services:
       - key: ADMIN_INITIAL_PASSWORD
         value: AnonAdminSecure2026!#
       - key: DATABASE_URL
-        sync: false
+        value: postgresql://ananochat_user:xeNeLdlP7T8JaldH7WjovEvbdF16GLkv@dpg-db7q0tqd0e5s73eokg70-a/ananochat
+      - key: EXTERNAL_DATABASE_URL
+        value: postgresql://ananochat_user:xeNeLdlP7T8JaldH7WjovEvbdF16GLkv@dpg-db7q0tqd0e5s73eokg70-a.virginia-postgres.render.com/ananochat
       - key: PGHOST
-        value: db.xgihneqqlatwxbevggci.supabase.co
+        value: dpg-db7q0tqd0e5s73eokg70-a
       - key: PGPORT
         value: "5432"
       - key: PGDATABASE
-        value: postgres
+        value: ananochat
       - key: PGUSER
-        value: postgres
+        value: ananochat_user
       - key: PGPASSWORD
-        sync: false
-      - key: SUPABASE_URL
-        value: https://xgihneqqlatwxbevggci.supabase.co
-      - key: SUPABASE_PUBLISHABLE_KEY
-        value: sb_publishable_jDis4tfV89Ww3R49HkGJLw_joOq08hL
-      - key: SUPABASE_SECRET_KEY
-        sync: false
+        value: xeNeLdlP7T8JaldH7WjovEvbdF16GLkv

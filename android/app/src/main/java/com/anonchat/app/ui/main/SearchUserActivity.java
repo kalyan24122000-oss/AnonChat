@@ -97,12 +97,15 @@ public class SearchUserActivity extends AppCompatActivity {
     }
 
     private void startConversationWithUser(User user) {
+        if (user == null || user.getId() == null) return;
+        searchProgress.setVisibility(View.VISIBLE);
         Map<String, String> body = new HashMap<>();
         body.put("recipientId", user.getId());
 
         ((AnonChatApp) getApplication()).getApiService().getOrCreateConversation(body).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                searchProgress.setVisibility(View.GONE);
                 if (response.isSuccessful() && response.body() != null) {
                     String convId = (String) response.body().get("id");
                     Intent intent = new Intent(SearchUserActivity.this, ConversationActivity.class);
@@ -119,6 +122,7 @@ public class SearchUserActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                searchProgress.setVisibility(View.GONE);
                 Toast.makeText(SearchUserActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -153,8 +157,15 @@ public class SearchUserActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             User u = users.get(position);
             holder.tvUserId.setText(u.getId());
-            holder.tvUserName.setText(u.getDisplayName() != null ? u.getDisplayName() : "Anonymous User");
+            holder.tvUserName.setText(u.getDisplayName() != null && !u.getDisplayName().isEmpty() ? u.getDisplayName() : "Anonymous User");
+            if (holder.tvAvatar != null) {
+                String initial = u.getDisplayName() != null && !u.getDisplayName().isEmpty()
+                        ? u.getDisplayName().substring(0, 1).toUpperCase()
+                        : (u.getId() != null ? u.getId().substring(Math.max(0, u.getId().length() - 2)).toUpperCase() : "U");
+                holder.tvAvatar.setText(initial);
+            }
             holder.btnStartChat.setOnClickListener(v -> listener.onUserClick(u));
+            holder.itemView.setOnClickListener(v -> listener.onUserClick(u));
         }
 
         @Override
@@ -163,12 +174,14 @@ public class SearchUserActivity extends AppCompatActivity {
         }
 
         static class ViewHolder extends RecyclerView.ViewHolder {
+            final TextView tvAvatar;
             final TextView tvUserId;
             final TextView tvUserName;
             final MaterialButton btnStartChat;
 
             ViewHolder(@NonNull View itemView) {
                 super(itemView);
+                tvAvatar = itemView.findViewById(R.id.tv_search_avatar);
                 tvUserId = itemView.findViewById(R.id.tv_search_user_id);
                 tvUserName = itemView.findViewById(R.id.tv_search_user_name);
                 btnStartChat = itemView.findViewById(R.id.btn_start_chat);

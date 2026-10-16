@@ -140,6 +140,11 @@ public class MainActivity extends AppCompatActivity {
         if (tabSettings != null) {
             tabSettings.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
         }
+
+        View btnEmptyStart = findViewById(R.id.btn_empty_start_chat);
+        if (btnEmptyStart != null) {
+            btnEmptyStart.setOnClickListener(v -> startActivity(new Intent(this, com.anonchat.app.ui.main.SearchUserActivity.class)));
+        }
     }
 
     private void filterConversations(String query) {

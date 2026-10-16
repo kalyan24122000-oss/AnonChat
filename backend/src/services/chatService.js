@@ -1,6 +1,6 @@
 const crypto = require('node:crypto');
 const { getDb, runTransaction } = require('../database/db');
-const { pushRecord } = require('../database/cloudSync');
+const { pushRecord, updateRecord } = require('../database/cloudSync');
 
 /**
  * Get or create a direct conversation between two users
@@ -302,12 +302,34 @@ function markMessagesDelivered(userId, conversationId = null) {
   const now = Date.now();
 
   if (conversationId) {
+    try {
+      const affected = db.prepare(`
+        SELECT id FROM messages 
+        WHERE conversation_id = ? AND recipient_id = ? AND status = 'sent'
+      `).all(conversationId, userId);
+      for (const m of affected) {
+        updateRecord('messages', m.id, { status: 'delivered', delivered_at: now });
+      }
+    } catch (e) {
+      // Ignore select error
+    }
     db.prepare(`
       UPDATE messages 
       SET status = 'delivered', delivered_at = ?
       WHERE conversation_id = ? AND recipient_id = ? AND status = 'sent'
     `).run(now, conversationId, userId);
   } else {
+    try {
+      const affected = db.prepare(`
+        SELECT id FROM messages 
+        WHERE recipient_id = ? AND status = 'sent'
+      `).all(userId);
+      for (const m of affected) {
+        updateRecord('messages', m.id, { status: 'delivered', delivered_at: now });
+      }
+    } catch (e) {
+      // Ignore select error
+    }
     db.prepare(`
       UPDATE messages 
       SET status = 'delivered', delivered_at = ?
@@ -322,6 +344,18 @@ function markMessagesDelivered(userId, conversationId = null) {
 function markMessagesRead(userId, conversationId) {
   const db = getDb();
   const now = Date.now();
+
+  try {
+    const affected = db.prepare(`
+      SELECT id FROM messages 
+      WHERE conversation_id = ? AND recipient_id = ? AND status != 'read'
+    `).all(conversationId, userId);
+    for (const m of affected) {
+      updateRecord('messages', m.id, { status: 'read', read_at: now });
+    }
+  } catch (e) {
+    // Ignore select error
+  }
 
   runTransaction((conn) => {
     conn.prepare(`

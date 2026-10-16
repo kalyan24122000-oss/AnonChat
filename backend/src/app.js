@@ -73,6 +73,23 @@ if (!fs.existsSync(landingPath)) {
 if (!fs.existsSync(landingPath)) {
   landingPath = path.resolve(__dirname, './landing');
 }
+
+// Direct APK download route
+app.get('/PrimeChat-v1.0.apk', (req, res) => {
+  const candidates = [
+    path.resolve(__dirname, '../../PrimeChat-v1.0.apk'),
+    path.resolve(landingPath, 'PrimeChat-v1.0.apk'),
+    path.resolve(__dirname, '../PrimeChat-v1.0.apk'),
+    path.resolve(__dirname, './PrimeChat-v1.0.apk')
+  ];
+  for (const apkPath of candidates) {
+    if (fs.existsSync(apkPath)) {
+      return res.download(apkPath, 'PrimeChat-v1.0.apk');
+    }
+  }
+  res.status(404).send('PrimeChat APK not found on server');
+});
+
 app.use('/', express.static(landingPath));
 
 // Global Error Handler

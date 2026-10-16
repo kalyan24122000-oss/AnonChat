@@ -22,16 +22,17 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <!-- 1. Header Bar: Profile Avatar + "Chats" Title + Red Plus Button -->
+            <!-- 1. Top Header Bar: Profile Avatar + "Prime Chat" Title + New Chat (+) Button -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
                 android:paddingTop="16dp"
-                android:paddingBottom="10dp">
+                android:paddingBottom="12dp"
+                android:background="#131926">
 
                 <!-- User Profile Avatar (Clickable to open profile/settings) -->
                 <FrameLayout
@@ -55,25 +56,39 @@
                         android:textStyle="bold" />
                 </FrameLayout>
 
-                <!-- Bold Title: "Chats" -->
-                <TextView
-                    android:id="@+id/tv_header_chats_title"
+                <!-- App Title: "Prime Chat" -->
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="16dp"
-                    android:text="Chats"
-                    android:textColor="#FFFFFF"
-                    android:textSize="26sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="-0.02" />
+                    android:layout_marginStart="14dp"
+                    android:orientation="vertical">
 
-                <!-- Coral Red Circle Action Button (+) -->
+                    <TextView
+                        android:id="@+id/tv_header_chats_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/app_name"
+                        android:textColor="#FFFFFF"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="-0.02" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="End-to-End Encrypted Messaging"
+                        android:textColor="#94A3B8"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <!-- New Chat / Find Users Button (+) -->
                 <FrameLayout
                     android:id="@+id/btn_header_add_chat"
                     android:layout_width="42dp"
                     android:layout_height="42dp"
                     android:background="@drawable/bg_circle_button_coral"
+                    android:backgroundTint="@color/primary"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -90,22 +105,22 @@
             <!-- 2. Search Bar: Deep Sunken Dark Pill -->
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:layout_marginTop="6dp"
-                android:layout_marginBottom="10dp"
+                android:layout_height="44dp"
+                android:layout_marginStart="18dp"
+                android:layout_marginEnd="18dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="8dp"
                 android:background="@drawable/bg_search_pill_sunken"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp">
 
                 <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:src="@drawable/ic_search"
-                    app:tint="#6B7280"
+                    app:tint="#64748B"
                     android:contentDescription="Search" />
 
                 <EditText
@@ -113,10 +128,10 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="10dp"
                     android:background="@null"
-                    android:hint="Search"
-                    android:textColorHint="#6B7280"
+                    android:hint="Search chats or user ID..."
+                    android:textColorHint="#64748B"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
                     android:singleLine="true"
@@ -129,8 +144,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_marginStart="18dp"
+                android:layout_marginEnd="18dp"
                 android:layout_marginBottom="8dp"
                 android:padding="10dp"
                 android:background="@drawable/bg_media_card"
@@ -138,10 +153,10 @@
 
                 <ImageView
                     android:id="@+id/iv_subscription_icon"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:src="@drawable/ic_shield"
-                    app:tint="#FF4D4D"
+                    app:tint="@color/primary"
                     android:contentDescription="Status" />
 
                 <TextView
@@ -161,13 +176,13 @@
                     android:layout_height="32dp"
                     android:text="Activate"
                     android:textSize="11sp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
+                    android:paddingLeft="12dp"
+                    android:paddingRight="12dp"
                     app:cornerRadius="16dp"
-                    app:backgroundTint="#FF4D4D" />
+                    app:backgroundTint="@color/primary" />
             </LinearLayout>
 
-            <!-- 4. Chats List Container -->
+            <!-- 4. Conversations List Container -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -187,9 +202,9 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:clipToPadding="false"
-                            android:paddingBottom="96dp" />
+                            android:paddingBottom="84dp" />
 
-                        <!-- Empty State for Chats -->
+                        <!-- Genuine Chatting App Empty State -->
                         <LinearLayout
                             android:id="@+id/ll_empty_state"
                             android:layout_width="match_parent"
@@ -199,19 +214,26 @@
                             android:padding="32dp"
                             android:visibility="gone">
 
-                            <ImageView
-                                android:layout_width="64dp"
-                                android:layout_height="64dp"
-                                android:src="@drawable/ic_chats"
-                                app:tint="#4B5563"
-                                android:contentDescription="No Chats" />
+                            <FrameLayout
+                                android:layout_width="72dp"
+                                android:layout_height="72dp"
+                                android:background="@drawable/bg_circle_button_dark">
+
+                                <ImageView
+                                    android:layout_width="36dp"
+                                    android:layout_height="36dp"
+                                    android:layout_gravity="center"
+                                    android:src="@drawable/ic_chats"
+                                    app:tint="@color/primary"
+                                    android:contentDescription="No Chats" />
+                            </FrameLayout>
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="16dp"
-                                android:text="@string/empty_chats_title"
-                                android:textSize="17sp"
+                                android:text="No conversations yet"
+                                android:textSize="18sp"
                                 android:textStyle="bold"
                                 android:textColor="#FFFFFF" />
 
@@ -219,16 +241,27 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
-                                android:text="@string/empty_chats_sub"
+                                android:text="Find another user by their USR ID to start an encrypted private chat."
                                 android:gravity="center"
                                 android:textSize="13sp"
                                 android:textColor="#9CA3AF" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_empty_start_chat"
+                                android:layout_width="wrap_content"
+                                android:layout_height="44dp"
+                                android:layout_marginTop="20dp"
+                                android:text="Find Users to Chat"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                app:cornerRadius="22dp"
+                                app:backgroundTint="@color/primary" />
                         </LinearLayout>
                     </FrameLayout>
                 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
             </FrameLayout>
 
-            <!-- Subtle Footer Branding -->
+            <!-- Footer Branding -->
             <TextView
                 android:id="@+id/tv_footer_branding"
                 android:layout_width="match_parent"
@@ -236,37 +269,37 @@
                 android:gravity="center"
                 android:paddingTop="4dp"
                 android:paddingBottom="4dp"
-                android:text="@string/proud_production"
-                android:textSize="10sp"
+                android:text="PRIME CHAT • END-TO-END ENCRYPTED"
+                android:textSize="9sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.06"
-                android:textColor="#4B5563" />
+                android:letterSpacing="0.08"
+                android:textColor="#475569" />
 
         </LinearLayout>
 
-        <!-- 5. Floating Bottom Navigation Dock Bar (Chats & Settings Only) -->
+        <!-- 5. Floating Bottom Navigation Dock (Chats & Settings) -->
         <LinearLayout
             android:id="@+id/ll_bottom_dock"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="56dp"
             android:layout_alignParentBottom="true"
-            android:layout_marginStart="36dp"
-            android:layout_marginEnd="36dp"
+            android:layout_marginStart="44dp"
+            android:layout_marginEnd="44dp"
             android:layout_marginBottom="16dp"
             android:background="@drawable/bg_dock_bar"
             android:elevation="12dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
 
-            <!-- Tab 1: Chats (Active Pill in Coral Red) -->
+            <!-- Tab 1: Chats (Active Pill) -->
             <FrameLayout
                 android:id="@+id/tab_chats"
                 android:layout_width="0dp"
-                android:layout_height="42dp"
+                android:layout_height="38dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="6dp"
                 android:background="@drawable/bg_tab_active_coral"
                 android:clickable="true"
                 android:focusable="true">
@@ -279,8 +312,8 @@
                     android:gravity="center_vertical">
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
                         android:src="@drawable/ic_chats"
                         app:tint="#FFFFFF"
                         android:contentDescription="Chats" />
@@ -288,10 +321,10 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="6dp"
                         android:text="Chats"
                         android:textColor="#FFFFFF"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </FrameLayout>
@@ -300,9 +333,9 @@
             <FrameLayout
                 android:id="@+id/tab_settings"
                 android:layout_width="0dp"
-                android:layout_height="42dp"
+                android:layout_height="38dp"
                 android:layout_weight="1"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="6dp"
                 android:background="@drawable/bg_tab_inactive_dark"
                 android:clickable="true"
                 android:focusable="true">
@@ -315,19 +348,19 @@
                     android:gravity="center_vertical">
 
                     <ImageView
-                        android:layout_width="19dp"
-                        android:layout_height="19dp"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
                         android:src="@drawable/ic_settings"
-                        app:tint="#9CA3AF"
+                        app:tint="#94A3B8"
                         android:contentDescription="Settings" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="6dp"
                         android:text="Settings"
-                        android:textColor="#9CA3AF"
-                        android:textSize="14sp"
+                        android:textColor="#94A3B8"
+                        android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </FrameLayout>
@@ -336,8 +369,8 @@
         <!-- Hidden FloatingActionButton for backward compatibility -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_new_chat"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
             android:visibility="gone"
             android:contentDescription="New Chat" />
 

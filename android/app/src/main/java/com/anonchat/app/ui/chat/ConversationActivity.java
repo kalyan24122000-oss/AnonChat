@@ -74,7 +74,7 @@ public class ConversationActivity extends BaseSecureActivity {
         android.widget.ImageView btnAttachMedia = findViewById(R.id.btn_attach_media);
         containerTrialExpired = findViewById(R.id.container_trial_expired);
         containerInputBar = findViewById(R.id.container_input_bar);
-        LinearLayout bannerSecurity = findViewById(R.id.banner_security_disclosure);
+        View bannerSecurity = findViewById(R.id.banner_security_disclosure);
         MaterialButton btnActivate = findViewById(R.id.btn_activate_from_chat);
 
         setupCustomHeaderAndInputDock();
@@ -86,9 +86,15 @@ public class ConversationActivity extends BaseSecureActivity {
         rvMessages.setLayoutManager(layoutManager);
         rvMessages.setAdapter(adapter);
 
-        bannerSecurity.setOnClickListener(v -> showSecurityDisclosureDialog());
-        btnActivate.setOnClickListener(v -> startActivity(new Intent(this, LicenseActivationActivity.class)));
-        btnSendMessage.setOnClickListener(v -> sendMessage());
+        if (bannerSecurity != null) {
+            bannerSecurity.setOnClickListener(v -> showSecurityDisclosureDialog());
+        }
+        if (btnActivate != null) {
+            btnActivate.setOnClickListener(v -> startActivity(new Intent(this, LicenseActivationActivity.class)));
+        }
+        if (btnSendMessage != null) {
+            btnSendMessage.setOnClickListener(v -> sendMessage());
+        }
         if (btnAttachMedia != null) {
             btnAttachMedia.setOnClickListener(v -> showMediaAttachmentPicker());
         }
@@ -135,20 +141,6 @@ public class ConversationActivity extends BaseSecureActivity {
             tvAvatar.setText(initial.toUpperCase());
         }
 
-
-        View btnEmoji = findViewById(R.id.btn_emoji);
-        if (btnEmoji != null) {
-            btnEmoji.setOnClickListener(v -> {
-                if (etMessageInput != null) {
-                    etMessageInput.append(" 😊 ");
-                }
-            });
-        }
-
-        View btnCamera = findViewById(R.id.btn_camera_capture);
-        if (btnCamera != null) {
-            btnCamera.setOnClickListener(v -> showMediaAttachmentPicker());
-        }
 
         android.widget.ImageView ivSendIcon = findViewById(R.id.iv_send_icon);
         if (ivSendIcon != null) {
