@@ -1,6 +1,6 @@
 const crypto = require('node:crypto');
 const { getDb, runTransaction } = require('../database/db');
-const { pushRecord, updateRecord } = require('../database/cloudSync');
+const { pushRecord, updateRecord, deleteRecord, clearMessagesCloud, deleteConversationCloud } = require('../database/cloudSync');
 
 /**
  * Get or create a direct conversation between two users
@@ -372,11 +372,103 @@ function markMessagesRead(userId, conversationId) {
   });
 }
 
+/**
+ * Clear all messages in a conversation
+ */
+function clearConversationMessages(conversationId, userId) {
+  const db = getDb();
+
+  const member = db.prepare('SELECT 1 FROM conversation_members WHERE conversation_id = ? AND user_id = ?')
+    .get(conversationId, userId);
+  if (!member) {
+    const error = new Error('Access denied: not a participant of this conversation');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const members = db.prepare('SELECT user_id FROM conversation_members WHERE conversation_id = ?').all(conversationId);
+  const memberIds = members.map(m => m.user_id);
+
+  const now = Date.now();
+  runTransaction((conn) => {
+    conn.prepare('DELETE FROM messages WHERE conversation_id = ?').run(conversationId);
+    conn.prepare('UPDATE conversations SET updated_at = ? WHERE id = ?').run(now, conversationId);
+  });
+
+  clearMessagesCloud(conversationId);
+
+  return { success: true, conversationId, memberIds };
+}
+
+/**
+ * Delete entire conversation and its messages
+ */
+function deleteConversation(conversationId, userId) {
+  const db = getDb();
+
+  const member = db.prepare('SELECT 1 FROM conversation_members WHERE conversation_id = ? AND user_id = ?')
+    .get(conversationId, userId);
+  if (!member) {
+    const error = new Error('Access denied: not a participant of this conversation');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const members = db.prepare('SELECT user_id FROM conversation_members WHERE conversation_id = ?').all(conversationId);
+  const memberIds = members.map(m => m.user_id);
+
+  runTransaction((conn) => {
+    conn.prepare('DELETE FROM messages WHERE conversation_id = ?').run(conversationId);
+    conn.prepare('DELETE FROM conversation_members WHERE conversation_id = ?').run(conversationId);
+    conn.prepare('DELETE FROM conversations WHERE id = ?').run(conversationId);
+  });
+
+  deleteConversationCloud(conversationId);
+
+  return { success: true, conversationId, memberIds };
+}
+
+/**
+ * Delete a single message
+ */
+function deleteSingleMessage(messageId, userId) {
+  const db = getDb();
+  const msg = db.prepare('SELECT id, conversation_id, sender_id, recipient_id FROM messages WHERE id = ?').get(messageId);
+  if (!msg) {
+    const error = new Error('Message not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (msg.sender_id !== userId && msg.recipient_id !== userId) {
+    const error = new Error('Access denied: you cannot delete this message');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  runTransaction((conn) => {
+    conn.prepare('DELETE FROM messages WHERE id = ?').run(messageId);
+  });
+
+  deleteRecord('messages', messageId);
+
+  return {
+    success: true,
+    messageId,
+    conversationId: msg.conversation_id,
+    senderId: msg.sender_id,
+    recipientId: msg.recipient_id
+  };
+}
+
 module.exports = {
   getOrCreateConversation,
   getUserConversations,
   saveEncryptedMessage,
   getConversationMessages,
   markMessagesDelivered,
-  markMessagesRead
+  markMessagesRead,
+  clearConversationMessages,
+  deleteConversation,
+  deleteSingleMessage
 };

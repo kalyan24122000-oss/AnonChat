@@ -123,6 +123,25 @@
                 app:tint="#6366F1"
                 android:contentDescription="Security Info" />
         </FrameLayout>
+
+        <!-- 3-Dots More Options Menu Button -->
+        <FrameLayout
+            android:id="@+id/btn_chat_menu"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_circle_button_dark"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_more_vert"
+                app:tint="#FFFFFF"
+                android:contentDescription="Chat Options" />
+        </FrameLayout>
     </LinearLayout>
 
     <!-- Subtle Privacy / E2EE Info Strip -->

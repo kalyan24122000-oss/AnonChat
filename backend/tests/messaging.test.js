@@ -104,3 +104,52 @@ test('Messaging: Blocked user cannot message blocker', async () => {
   });
   assert.ok(allowedMsg.id);
 });
+
+test('Messaging: Delete single message, clear chat, and delete conversation', async () => {
+  const user1 = await userService.registerUser({ displayName: 'UserClear1', password: 'Password123!' });
+  const user2 = await userService.registerUser({ displayName: 'UserClear2', password: 'Password123!' });
+
+  const conv = chatService.getOrCreateConversation(user1.user.id, user2.user.id);
+
+  // Send two messages
+  const msg1 = chatService.saveEncryptedMessage({
+    conversationId: conv.id,
+    senderId: user1.user.id,
+    recipientId: user2.user.id,
+    encryptedContent: 'CIPHERTEXT_1',
+    iv: 'IV1',
+    authTag: 'TAG1'
+  });
+
+  const msg2 = chatService.saveEncryptedMessage({
+    conversationId: conv.id,
+    senderId: user2.user.id,
+    recipientId: user1.user.id,
+    encryptedContent: 'CIPHERTEXT_2',
+    iv: 'IV2',
+    authTag: 'TAG2'
+  });
+
+  let msgs = chatService.getConversationMessages(conv.id, user1.user.id);
+  assert.equal(msgs.length, 2);
+
+  // 1. Delete single message msg1
+  const delMsgResult = chatService.deleteSingleMessage(msg1.id, user1.user.id);
+  assert.equal(delMsgResult.success, true);
+  msgs = chatService.getConversationMessages(conv.id, user1.user.id);
+  assert.equal(msgs.length, 1);
+  assert.equal(msgs[0].id, msg2.id);
+
+  // 2. Clear conversation messages
+  const clearResult = chatService.clearConversationMessages(conv.id, user1.user.id);
+  assert.equal(clearResult.success, true);
+  msgs = chatService.getConversationMessages(conv.id, user1.user.id);
+  assert.equal(msgs.length, 0);
+
+  // 3. Delete entire conversation
+  const delConvResult = chatService.deleteConversation(conv.id, user1.user.id);
+  assert.equal(delConvResult.success, true);
+  const userConvs = chatService.getUserConversations(user1.user.id);
+  assert.ok(!userConvs.some(c => c.id === conv.id));
+});
+

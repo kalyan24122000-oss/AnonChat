@@ -140,7 +140,8 @@ public class LoginActivity extends AppCompatActivity {
 
     private void publishPublicKeyIfNeeded() {
         try {
-            String pubKey = ((AnonChatApp) getApplication()).getCryptoManager().getOrCreateIdentityPublicKey();
+            String userId = prefHelper.getUserId();
+            String pubKey = ((AnonChatApp) getApplication()).getCryptoManager().getOrCreateIdentityPublicKey(userId);
             Map<String, String> body = new HashMap<>();
             body.put("publicKey", pubKey);
             ((AnonChatApp) getApplication()).getApiService().updatePublicKey(body).enqueue(new Callback<Map<String, Object>>() {

@@ -5,10 +5,12 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,6 +33,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -91,8 +94,28 @@ public class MainActivity extends AppCompatActivity {
         ((AnonChatApp) getApplication()).getSocketService().connect();
         setupSocketListener();
 
+        // Ensure current identity public key is registered on server
+        publishPublicKeyIfNeeded();
+
         // Biometric Security Prompt
         checkBiometricAuth();
+    }
+
+    private void publishPublicKeyIfNeeded() {
+        try {
+            String userId = prefHelper.getUserId();
+            if (userId != null && !userId.isEmpty()) {
+                String pubKey = ((AnonChatApp) getApplication()).getCryptoManager().getOrCreateIdentityPublicKey(userId);
+                Map<String, String> body = new java.util.HashMap<>();
+                body.put("publicKey", pubKey);
+                ((AnonChatApp) getApplication()).getApiService().updatePublicKey(body).enqueue(new Callback<Map<String, Object>>() {
+                    @Override
+                    public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {}
+                    @Override
+                    public void onFailure(Call<Map<String, Object>> call, Throwable t) {}
+                });
+            }
+        } catch (Exception ignored) {}
     }
 
     private List<Conversation> allConversations = new ArrayList<>();
@@ -207,6 +230,8 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra(Constants.EXTRA_RECIPIENT_PUBLIC_KEY, conversation.getRecipient().getPublicKey());
             }
             startActivity(intent);
+        }, conversation -> {
+            showConversationOptionsDialog(conversation);
         });
         rvConversations.setAdapter(adapter);
 
@@ -218,6 +243,148 @@ public class MainActivity extends AppCompatActivity {
         fabNewChat.setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, SearchUserActivity.class));
         });
+    }
+
+    private void showConversationOptionsDialog(Conversation conversation) {
+        if (conversation == null) return;
+        String recipientName = conversation.getRecipient() != null && conversation.getRecipient().getDisplayName() != null
+            ? conversation.getRecipient().getDisplayName()
+            : (conversation.getRecipient() != null ? conversation.getRecipient().getId() : "Chat");
+
+        String[] options = new String[]{
+            getString(R.string.clear_chat),
+            getString(R.string.delete_conversation),
+            getString(R.string.block_user),
+            getString(R.string.report_user)
+        };
+
+        new AlertDialog.Builder(this)
+            .setTitle(recipientName)
+            .setItems(options, (dialog, which) -> {
+                if (which == 0) {
+                    confirmClearConversation(conversation);
+                } else if (which == 1) {
+                    confirmDeleteConversation(conversation);
+                } else if (which == 2) {
+                    confirmBlockUser(conversation);
+                } else if (which == 3) {
+                    confirmReportUser(conversation);
+                }
+            })
+            .show();
+    }
+
+    private void confirmBlockUser(Conversation conversation) {
+        if (conversation == null || conversation.getRecipient() == null) return;
+        String targetId = conversation.getRecipient().getId();
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.block_user)
+            .setMessage("Block communications from " + targetId + "? They will no longer be able to message you.")
+            .setPositiveButton(R.string.block_user, (dialog, which) -> {
+                Map<String, String> body = new HashMap<>();
+                body.put("blockedId", targetId);
+                ((AnonChatApp) getApplication()).getApiService().blockUser(body).enqueue(new Callback<Map<String, Object>>() {
+                    @Override
+                    public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                        Toast.makeText(MainActivity.this, "User blocked", Toast.LENGTH_SHORT).show();
+                        loadConversations();
+                    }
+
+                    @Override
+                    public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                        Toast.makeText(MainActivity.this, "Error blocking user", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void confirmReportUser(Conversation conversation) {
+        if (conversation == null || conversation.getRecipient() == null) return;
+        String targetId = conversation.getRecipient().getId();
+        final EditText etReason = new EditText(this);
+        etReason.setHint("Reason for report (e.g. harassment, abuse)");
+
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.report_user)
+            .setView(etReason)
+            .setPositiveButton("Submit Report", (dialog, which) -> {
+                String reason = etReason.getText().toString().trim();
+                Map<String, String> body = new HashMap<>();
+                body.put("reportedId", targetId);
+                body.put("reason", reason);
+                ((AnonChatApp) getApplication()).getApiService().reportUser(body).enqueue(new Callback<Map<String, Object>>() {
+                    @Override
+                    public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                        Toast.makeText(MainActivity.this, "Report submitted securely to administrator", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                        Toast.makeText(MainActivity.this, "Failed to submit report", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void confirmClearConversation(Conversation conversation) {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.clear_chat)
+            .setMessage(R.string.clear_chat_confirm)
+            .setPositiveButton(R.string.clear_chat, (dialog, which) -> {
+                ((AnonChatApp) getApplication()).getApiService().clearConversationMessages(conversation.getId())
+                    .enqueue(new Callback<Map<String, Object>>() {
+                        @Override
+                        public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                            if (response.isSuccessful()) {
+                                Toast.makeText(MainActivity.this, R.string.clear_chat_success, Toast.LENGTH_SHORT).show();
+                                loadConversations();
+                            } else {
+                                Toast.makeText(MainActivity.this, "Failed to clear chat", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                            Toast.makeText(MainActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void confirmDeleteConversation(Conversation conversation) {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.delete_conversation)
+            .setMessage(R.string.delete_conversation_confirm)
+            .setPositiveButton(R.string.delete_conversation, (dialog, which) -> {
+                ((AnonChatApp) getApplication()).getApiService().deleteConversation(conversation.getId())
+                    .enqueue(new Callback<Map<String, Object>>() {
+                        @Override
+                        public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                            if (response.isSuccessful()) {
+                                Toast.makeText(MainActivity.this, R.string.delete_conversation_success, Toast.LENGTH_SHORT).show();
+                                if (adapter != null) {
+                                    adapter.removeConversation(conversation.getId());
+                                }
+                                loadConversations();
+                            } else {
+                                Toast.makeText(MainActivity.this, "Failed to delete conversation", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                            Toast.makeText(MainActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
     }
 
     @Override
@@ -248,6 +415,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAccountSuspended() {
                 handleAccountSuspended();
+            }
+
+            @Override
+            public void onConversationCleared(String conversationId) {
+                loadConversations();
+            }
+
+            @Override
+            public void onConversationDeleted(String conversationId) {
+                if (adapter != null) {
+                    adapter.removeConversation(conversationId);
+                }
+                loadConversations();
             }
         });
     }

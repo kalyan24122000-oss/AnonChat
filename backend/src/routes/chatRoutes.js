@@ -197,4 +197,86 @@ router.post('/conversations/:id/read', authenticateToken, (req, res, next) => {
   }
 });
 
+// Clear all messages in a conversation
+router.delete('/conversations/:id/messages', authenticateToken, (req, res, next) => {
+  try {
+    const result = chatService.clearConversationMessages(req.params.id, req.user.id);
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`conv:${req.params.id}`).emit('conversation_cleared', {
+        conversationId: req.params.id,
+        clearedBy: req.user.id
+      });
+      if (result.memberIds && Array.isArray(result.memberIds)) {
+        result.memberIds.forEach((uid) => {
+          io.to(`user:${uid}`).emit('conversation_cleared', {
+            conversationId: req.params.id,
+            clearedBy: req.user.id
+          });
+        });
+      }
+    }
+    res.json({ success: true, message: 'Chat cleared successfully' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Delete entire conversation and its messages
+router.delete('/conversations/:id', authenticateToken, (req, res, next) => {
+  try {
+    const result = chatService.deleteConversation(req.params.id, req.user.id);
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`conv:${req.params.id}`).emit('conversation_deleted', {
+        conversationId: req.params.id,
+        deletedBy: req.user.id
+      });
+      if (result.memberIds && Array.isArray(result.memberIds)) {
+        result.memberIds.forEach((uid) => {
+          io.to(`user:${uid}`).emit('conversation_deleted', {
+            conversationId: req.params.id,
+            deletedBy: req.user.id
+          });
+        });
+      }
+    }
+    res.json({ success: true, message: 'Conversation deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Delete a single message
+router.delete('/messages/:id', authenticateToken, (req, res, next) => {
+  try {
+    const result = chatService.deleteSingleMessage(req.params.id, req.user.id);
+    const io = req.app.get('io');
+    if (io) {
+      if (result.conversationId) {
+        io.to(`conv:${result.conversationId}`).emit('message_deleted', {
+          messageId: req.params.id,
+          conversationId: result.conversationId,
+          deletedBy: req.user.id
+        });
+      }
+      if (result.recipientId) {
+        io.to(`user:${result.recipientId}`).emit('message_deleted', {
+          messageId: req.params.id,
+          conversationId: result.conversationId,
+          deletedBy: req.user.id
+        });
+      }
+      io.to(`user:${req.user.id}`).emit('message_deleted', {
+        messageId: req.params.id,
+        conversationId: result.conversationId,
+        deletedBy: req.user.id
+      });
+    }
+    res.json({ success: true, message: 'Message deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

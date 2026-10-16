@@ -299,10 +299,52 @@ function updateRecord(table, id, updates) {
 // Keep pullFromSupabase as alias for backward compatibility
 const pullFromSupabase = pullFromCloud;
 
+/**
+ * Asynchronously clear messages of a conversation in Render PostgreSQL
+ */
+function clearMessagesCloud(conversationId) {
+  if (isTestEnv()) return;
+
+  enqueueSyncTask(async () => {
+    try {
+      const pool = getPgPool();
+      if (!pool) return;
+
+      await pool.query('DELETE FROM public.messages WHERE conversation_id = $1;', [conversationId]);
+      console.log(`[CloudSync] Cleared messages for conversation [${conversationId}] in Render PostgreSQL.`);
+    } catch (err) {
+      console.error('[CloudSync Error clearing messages]', err.message);
+    }
+  });
+}
+
+/**
+ * Asynchronously delete an entire conversation in Render PostgreSQL
+ */
+function deleteConversationCloud(conversationId) {
+  if (isTestEnv()) return;
+
+  enqueueSyncTask(async () => {
+    try {
+      const pool = getPgPool();
+      if (!pool) return;
+
+      await pool.query('DELETE FROM public.messages WHERE conversation_id = $1;', [conversationId]);
+      await pool.query('DELETE FROM public.conversation_members WHERE conversation_id = $1;', [conversationId]);
+      await pool.query('DELETE FROM public.conversations WHERE id = $1;', [conversationId]);
+      console.log(`[CloudSync] Deleted conversation [${conversationId}] and members in Render PostgreSQL.`);
+    } catch (err) {
+      console.error('[CloudSync Error deleting conversation]', err.message);
+    }
+  });
+}
+
 module.exports = {
   pullFromCloud,
   pullFromSupabase,
   pushRecord,
   deleteRecord,
-  updateRecord
+  updateRecord,
+  clearMessagesCloud,
+  deleteConversationCloud
 };

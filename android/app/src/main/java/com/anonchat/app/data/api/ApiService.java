@@ -13,6 +13,7 @@ import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -40,6 +41,9 @@ public interface ApiService {
 
     @PUT("api/users/public-key")
     Call<Map<String, Object>> updatePublicKey(@Body Map<String, String> body);
+
+    @GET("api/users/{id}/public-key")
+    Call<Map<String, Object>> getUserPublicKey(@Path("id") String userId);
 
     @GET("api/users/search")
     Call<Map<String, List<User>>> searchUser(@Query("id") String userId);
@@ -71,6 +75,15 @@ public interface ApiService {
 
     @POST("api/chat/conversations/{id}/read")
     Call<Map<String, Object>> markMessagesRead(@Path("id") String conversationId);
+
+    @DELETE("api/chat/conversations/{id}/messages")
+    Call<Map<String, Object>> clearConversationMessages(@Path("id") String conversationId);
+
+    @DELETE("api/chat/conversations/{id}")
+    Call<Map<String, Object>> deleteConversation(@Path("id") String conversationId);
+
+    @DELETE("api/chat/messages/{id}")
+    Call<Map<String, Object>> deleteMessage(@Path("id") String messageId);
 
     // Licensing & Plans
     @GET("api/license/status")

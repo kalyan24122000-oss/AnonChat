@@ -24,21 +24,31 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         void onDownloadMedia(Message message);
     }
 
+    public interface OnMessageLongClickListener {
+        void onMessageLongClick(Message message);
+    }
+
     private static final int VIEW_TYPE_SENT = 1;
     private static final int VIEW_TYPE_RECEIVED = 2;
 
     private final List<Message> messages = new ArrayList<>();
     private final String currentUserId;
     private final OnMediaClickListener mediaClickListener;
+    private final OnMessageLongClickListener messageLongClickListener;
     private String baseUrl;
 
     public MessageAdapter(String currentUserId) {
-        this(currentUserId, null);
+        this(currentUserId, null, null);
     }
 
     public MessageAdapter(String currentUserId, OnMediaClickListener mediaClickListener) {
+        this(currentUserId, mediaClickListener, null);
+    }
+
+    public MessageAdapter(String currentUserId, OnMediaClickListener mediaClickListener, OnMessageLongClickListener messageLongClickListener) {
         this.currentUserId = currentUserId;
         this.mediaClickListener = mediaClickListener;
+        this.messageLongClickListener = messageLongClickListener;
     }
 
     public void setBaseUrl(String baseUrl) {
@@ -47,6 +57,23 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     public List<Message> getMessages() {
         return messages;
+    }
+
+    public void clearMessages() {
+        int count = messages.size();
+        messages.clear();
+        notifyItemRangeRemoved(0, count);
+    }
+
+    public void removeMessage(String messageId) {
+        if (messageId == null) return;
+        for (int i = 0; i < messages.size(); i++) {
+            if (messageId.equals(messages.get(i).getId())) {
+                messages.remove(i);
+                notifyItemRemoved(i);
+                break;
+            }
+        }
     }
 
     public void setMessages(List<Message> list) {
@@ -62,6 +89,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         if (message.getId() != null) {
             for (int i = 0; i < messages.size(); i++) {
                 if (message.getId().equals(messages.get(i).getId())) {
+                    Message existing = messages.get(i);
+                    // Crucial: preserve existing decrypted plaintext if new message object lacks it or is error
+                    if ((message.getPlaintext() == null || message.getPlaintext().startsWith("["))
+                            && existing.getPlaintext() != null && !existing.getPlaintext().startsWith("[")) {
+                        message.setPlaintext(existing.getPlaintext());
+                    }
                     messages.set(i, message);
                     notifyItemChanged(i);
                     return;
@@ -118,9 +151,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Message msg = messages.get(position);
         if (holder instanceof SentViewHolder) {
-            ((SentViewHolder) holder).bind(msg, mediaClickListener, baseUrl);
+            ((SentViewHolder) holder).bind(msg, mediaClickListener, messageLongClickListener, baseUrl);
         } else if (holder instanceof ReceivedViewHolder) {
-            ((ReceivedViewHolder) holder).bind(msg, mediaClickListener, baseUrl);
+            ((ReceivedViewHolder) holder).bind(msg, mediaClickListener, messageLongClickListener, baseUrl);
         }
     }
 
@@ -153,7 +186,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             btnMediaDownload = itemView.findViewById(R.id.btn_media_download);
         }
 
-        public void bind(Message msg, OnMediaClickListener listener, String baseUrl) {
+        public void bind(Message msg, OnMediaClickListener listener, OnMessageLongClickListener longClickListener, String baseUrl) {
             tvTime.setText(DateFormatter.formatMessageTime(msg.getCreatedAt()));
 
             if (msg.isMedia()) {
@@ -185,6 +218,14 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 containerMedia.setVisibility(View.GONE);
                 tvText.setText(msg.getPlaintext() != null ? msg.getPlaintext() : "[Decrypted Message]");
             }
+
+            itemView.setOnLongClickListener(v -> {
+                if (longClickListener != null) {
+                    longClickListener.onMessageLongClick(msg);
+                    return true;
+                }
+                return false;
+            });
 
             String status = msg.getStatus();
             if ("read".equalsIgnoreCase(status)) {
@@ -222,7 +263,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             btnMediaDownload = itemView.findViewById(R.id.btn_media_download);
         }
 
-        public void bind(Message msg, OnMediaClickListener listener, String baseUrl) {
+        public void bind(Message msg, OnMediaClickListener listener, OnMessageLongClickListener longClickListener, String baseUrl) {
             tvTime.setText(DateFormatter.formatMessageTime(msg.getCreatedAt()));
 
             if (msg.isMedia()) {
@@ -254,6 +295,14 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 containerMedia.setVisibility(View.GONE);
                 tvText.setText(msg.getPlaintext() != null ? msg.getPlaintext() : "[Decrypted Message]");
             }
+
+            itemView.setOnLongClickListener(v -> {
+                if (longClickListener != null) {
+                    longClickListener.onMessageLongClick(msg);
+                    return true;
+                }
+                return false;
+            });
         }
     }
 }

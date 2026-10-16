@@ -62,8 +62,12 @@ public class CryptoManager {
      * Ensure the user has an EC identity keypair. Generates one if missing.
      */
     public synchronized String getOrCreateIdentityPublicKey() throws Exception {
-        String existingPub = preferenceHelper.getPublicKey();
-        String existingPriv = preferenceHelper.getPrivateKey();
+        return getOrCreateIdentityPublicKey(preferenceHelper.getUserId());
+    }
+
+    public synchronized String getOrCreateIdentityPublicKey(String userId) throws Exception {
+        String existingPub = preferenceHelper.getPublicKey(userId);
+        String existingPriv = preferenceHelper.getPrivateKey(userId);
 
         if (existingPub != null && existingPriv != null) {
             return existingPub;
@@ -78,7 +82,7 @@ public class CryptoManager {
         String pubBase64 = Base64.encodeToString(keyPair.getPublic().getEncoded(), Base64.NO_WRAP);
         String privBase64 = Base64.encodeToString(keyPair.getPrivate().getEncoded(), Base64.NO_WRAP);
 
-        preferenceHelper.saveKeys(pubBase64, privBase64);
+        preferenceHelper.saveKeys(userId, pubBase64, privBase64);
         return pubBase64;
     }
 

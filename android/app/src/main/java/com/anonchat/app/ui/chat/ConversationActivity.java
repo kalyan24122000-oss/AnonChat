@@ -10,6 +10,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -28,6 +29,7 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +81,7 @@ public class ConversationActivity extends BaseSecureActivity {
 
         setupCustomHeaderAndInputDock();
 
-        adapter = new MessageAdapter(getPrefHelper().getUserId(), this::downloadMediaToStorage);
+        adapter = new MessageAdapter(getPrefHelper().getUserId(), this::downloadMediaToStorage, this::showMessageOptionsDialog);
         adapter.setBaseUrl(getPrefHelper().getBaseUrl());
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
@@ -99,8 +101,8 @@ public class ConversationActivity extends BaseSecureActivity {
             btnAttachMedia.setOnClickListener(v -> showMediaAttachmentPicker());
         }
 
-        // Check if recipient public key is already available or needs lookup
-        if (recipientPublicKey == null && recipientId != null) {
+        // Always verify and fetch latest recipient public key
+        if (recipientId != null) {
             lookupRecipientKey();
         }
 
@@ -141,6 +143,10 @@ public class ConversationActivity extends BaseSecureActivity {
             tvAvatar.setText(initial.toUpperCase());
         }
 
+        View btnChatMenu = findViewById(R.id.btn_chat_menu);
+        if (btnChatMenu != null) {
+            btnChatMenu.setOnClickListener(this::showChatOptionsMenu);
+        }
 
         android.widget.ImageView ivSendIcon = findViewById(R.id.iv_send_icon);
         if (ivSendIcon != null) {
@@ -157,6 +163,14 @@ public class ConversationActivity extends BaseSecureActivity {
             @Override
             public void onNewMessage(Message message) {
                 if (conversationId != null && conversationId.equals(message.getConversationId())) {
+                    String myUserId = getPrefHelper().getUserId();
+                    boolean isOutgoing = (myUserId != null && myUserId.equalsIgnoreCase(message.getSenderId()));
+                    if (isOutgoing && message.getId() != null) {
+                        String cached = getPrefHelper().getMessagePlaintext(message.getId());
+                        if (cached != null && !cached.startsWith("[")) {
+                            message.setPlaintext(cached);
+                        }
+                    }
                     decryptAndAddMessage(message);
                     ((AnonChatApp) getApplication()).getSocketService().emitRead(conversationId, recipientId);
                 }
@@ -180,6 +194,34 @@ public class ConversationActivity extends BaseSecureActivity {
             @Override
             public void onAccountSuspended() {
                 handleAccountSuspended();
+            }
+
+            @Override
+            public void onConversationCleared(String convId) {
+                if (conversationId != null && conversationId.equals(convId)) {
+                    if (adapter != null) {
+                        adapter.clearMessages();
+                    }
+                    Toast.makeText(ConversationActivity.this, R.string.clear_chat_success, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onConversationDeleted(String convId) {
+                if (conversationId != null && conversationId.equals(convId)) {
+                    Toast.makeText(ConversationActivity.this, R.string.delete_conversation_success, Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+
+            @Override
+            public void onMessageDeleted(String messageId, String convId) {
+                if (conversationId != null && conversationId.equals(convId)) {
+                    if (adapter != null) {
+                        adapter.removeMessage(messageId);
+                    }
+                    getPrefHelper().deleteMessagePlaintext(messageId);
+                }
             }
         });
     }
@@ -209,6 +251,34 @@ public class ConversationActivity extends BaseSecureActivity {
 
     private void lookupRecipientKey() {
         if (recipientId == null) return;
+        getApiService().getUserPublicKey(recipientId).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Object keyObj = response.body().get("publicKey");
+                    if (keyObj == null) keyObj = response.body().get("public_key");
+                    if (keyObj instanceof String && !((String) keyObj).isEmpty()) {
+                        String newKey = (String) keyObj;
+                        boolean changed = !newKey.equals(recipientPublicKey);
+                        recipientPublicKey = newKey;
+                        if (changed) {
+                            redecryptAllMessages();
+                        }
+                        return;
+                    }
+                }
+                fallbackSearchUser();
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                fallbackSearchUser();
+            }
+        });
+    }
+
+    private void fallbackSearchUser() {
+        if (recipientId == null) return;
         getApiService().searchUser(recipientId).enqueue(new Callback<Map<String, List<User>>>() {
             @Override
             public void onResponse(Call<Map<String, List<User>>> call, Response<Map<String, List<User>>> response) {
@@ -219,8 +289,11 @@ public class ConversationActivity extends BaseSecureActivity {
                             if (recipientId.equalsIgnoreCase(u.getId())) {
                                 String key = u.getPublicKey();
                                 if (key != null && !key.isEmpty()) {
+                                    boolean changed = !key.equals(recipientPublicKey);
                                     recipientPublicKey = key;
-                                    redecryptAllMessages();
+                                    if (changed) {
+                                        redecryptAllMessages();
+                                    }
                                 }
                                 break;
                             }
@@ -238,7 +311,7 @@ public class ConversationActivity extends BaseSecureActivity {
         if (adapter == null) return;
         boolean changed = false;
         for (Message m : adapter.getMessages()) {
-            if (m.getPlaintext() == null || m.getPlaintext().startsWith("🔒")) {
+            if (m.getPlaintext() == null || m.getPlaintext().startsWith("[")) {
                 decryptMessageLocally(m);
                 changed = true;
             }
@@ -260,7 +333,7 @@ public class ConversationActivity extends BaseSecureActivity {
                         }
                         adapter.setMessages(list);
                         rvMessages.scrollToPosition(adapter.getItemCount() - 1);
-                        if (recipientPublicKey == null && recipientId != null) {
+                        if (recipientId != null) {
                             lookupRecipientKey();
                         }
                     }
@@ -313,6 +386,9 @@ public class ConversationActivity extends BaseSecureActivity {
                         Message sentMsg = response.body().get("message");
                         if (sentMsg != null) {
                             sentMsg.setPlaintext(plaintext);
+                            if (sentMsg.getId() != null) {
+                                getPrefHelper().saveMessagePlaintext(sentMsg.getId(), plaintext);
+                            }
                             adapter.addMessage(sentMsg);
                             rvMessages.scrollToPosition(adapter.getItemCount() - 1);
                         }
@@ -363,13 +439,39 @@ public class ConversationActivity extends BaseSecureActivity {
 
     private void decryptMessageLocally(Message msg) {
         if (msg == null) return;
+
+        // 1. Check local plaintext cache first
+        if (msg.getId() != null) {
+            String cached = getPrefHelper().getMessagePlaintext(msg.getId());
+            if (cached != null && !cached.isEmpty() && !cached.startsWith("[")) {
+                msg.setPlaintext(cached);
+                return;
+            }
+        }
+
         String myUserId = getPrefHelper().getUserId();
-        boolean isOutgoing = (myUserId != null && myUserId.equals(msg.getSenderId()));
+        boolean isOutgoing = (myUserId != null && myUserId.equalsIgnoreCase(msg.getSenderId()));
 
         if (isOutgoing) {
             // If already decrypted or optimistic local send, keep plaintext
-            if (msg.getPlaintext() != null && !msg.getPlaintext().startsWith("🔒")) {
+            if (msg.getPlaintext() != null && !msg.getPlaintext().startsWith("[")) {
+                if (msg.getId() != null) {
+                    getPrefHelper().saveMessagePlaintext(msg.getId(), msg.getPlaintext());
+                }
                 return;
+            }
+
+            // Check if adapter already has this message with plaintext
+            if (adapter != null && msg.getId() != null) {
+                for (Message existing : adapter.getMessages()) {
+                    if (msg.getId().equals(existing.getId())) {
+                        if (existing.getPlaintext() != null && !existing.getPlaintext().startsWith("[")) {
+                            msg.setPlaintext(existing.getPlaintext());
+                            getPrefHelper().saveMessagePlaintext(msg.getId(), existing.getPlaintext());
+                            return;
+                        }
+                    }
+                }
             }
 
             // Outgoing message loaded from server history can also be decrypted locally
@@ -385,11 +487,16 @@ public class ConversationActivity extends BaseSecureActivity {
                     );
                     if (decrypted != null && !decrypted.isEmpty()) {
                         msg.setPlaintext(decrypted);
+                        if (msg.getId() != null) {
+                            getPrefHelper().saveMessagePlaintext(msg.getId(), decrypted);
+                        }
                         return;
                     }
-                } catch (Exception ignored) {}
+                } catch (Exception e) {
+                    android.util.Log.w("ConversationActivity", "Outgoing decrypt failed: " + e.getMessage());
+                }
             }
-            if (msg.getPlaintext() == null) {
+            if (msg.getPlaintext() == null || msg.getPlaintext().startsWith("[")) {
                 msg.setPlaintext("[Encrypted Outgoing Message]");
             }
             return;
@@ -397,6 +504,9 @@ public class ConversationActivity extends BaseSecureActivity {
 
         // Incoming message
         if (msg.getPlaintext() != null && (msg.isMedia() || (!msg.getPlaintext().startsWith("[") && !msg.getPlaintext().isEmpty()))) {
+            if (msg.getId() != null) {
+                getPrefHelper().saveMessagePlaintext(msg.getId(), msg.getPlaintext());
+            }
             return;
         }
 
@@ -420,9 +530,21 @@ public class ConversationActivity extends BaseSecureActivity {
                 recipientPublicKey
             );
             msg.setPlaintext(decrypted);
+            if (msg.getId() != null && decrypted != null) {
+                getPrefHelper().saveMessagePlaintext(msg.getId(), decrypted);
+            }
         } catch (Exception e) {
+            android.util.Log.e("ConversationActivity", "Incoming decrypt failed for msg " + msg.getId() + ": " + e.getMessage());
             msg.setPlaintext("[Decryption Error]");
+            lookupRecipientKey();
         }
+    }
+
+    private void showChatOptionsMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(this, anchor);
+        popup.getMenuInflater().inflate(R.menu.menu_conversation, popup.getMenu());
+        popup.setOnMenuItemClickListener(this::onOptionsItemSelected);
+        popup.show();
     }
 
     @Override
@@ -437,6 +559,12 @@ public class ConversationActivity extends BaseSecureActivity {
         if (id == R.id.action_security_info) {
             showSecurityDisclosureDialog();
             return true;
+        } else if (id == R.id.action_clear_chat) {
+            confirmClearChat();
+            return true;
+        } else if (id == R.id.action_delete_conversation) {
+            confirmDeleteConversation();
+            return true;
         } else if (id == R.id.action_block_user) {
             confirmBlockUser();
             return true;
@@ -445,6 +573,130 @@ public class ConversationActivity extends BaseSecureActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void confirmClearChat() {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.clear_chat)
+            .setMessage(R.string.clear_chat_confirm)
+            .setPositiveButton(R.string.clear_chat, (dialog, which) -> {
+                if (conversationId == null) return;
+                getApiService().clearConversationMessages(conversationId).enqueue(new Callback<Map<String, Object>>() {
+                    @Override
+                    public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                        if (response.isSuccessful()) {
+                            Toast.makeText(ConversationActivity.this, R.string.clear_chat_success, Toast.LENGTH_SHORT).show();
+                            if (adapter != null) {
+                                List<String> msgIds = new ArrayList<>();
+                                for (Message m : adapter.getMessages()) {
+                                    if (m.getId() != null) msgIds.add(m.getId());
+                                }
+                                getPrefHelper().deleteMessagesPlaintext(msgIds);
+                                adapter.clearMessages();
+                            }
+                        } else {
+                            Toast.makeText(ConversationActivity.this, "Failed to clear chat", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                        Toast.makeText(ConversationActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void confirmDeleteConversation() {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.delete_conversation)
+            .setMessage(R.string.delete_conversation_confirm)
+            .setPositiveButton(R.string.delete_conversation, (dialog, which) -> {
+                if (conversationId == null) return;
+                getApiService().deleteConversation(conversationId).enqueue(new Callback<Map<String, Object>>() {
+                    @Override
+                    public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                        if (response.isSuccessful()) {
+                            Toast.makeText(ConversationActivity.this, R.string.delete_conversation_success, Toast.LENGTH_SHORT).show();
+                            if (adapter != null) {
+                                List<String> msgIds = new ArrayList<>();
+                                for (Message m : adapter.getMessages()) {
+                                    if (m.getId() != null) msgIds.add(m.getId());
+                                }
+                                getPrefHelper().deleteMessagesPlaintext(msgIds);
+                            }
+                            finish();
+                        } else {
+                            Toast.makeText(ConversationActivity.this, "Failed to delete conversation", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                        Toast.makeText(ConversationActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
+    }
+
+    private void showMessageOptionsDialog(Message message) {
+        if (message == null) return;
+        List<String> options = new ArrayList<>();
+        if (message.getPlaintext() != null && !message.getPlaintext().startsWith("[")) {
+            options.add(getString(R.string.copy_text));
+        }
+        options.add(getString(R.string.delete_message));
+
+        final String[] optionsArr = options.toArray(new String[0]);
+        new AlertDialog.Builder(this)
+            .setItems(optionsArr, (dialog, which) -> {
+                String selected = optionsArr[which];
+                if (getString(R.string.copy_text).equals(selected)) {
+                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                    android.content.ClipData clip = android.content.ClipData.newPlainText("Message", message.getPlaintext());
+                    if (clipboard != null) {
+                        clipboard.setPrimaryClip(clip);
+                        Toast.makeText(this, R.string.copied, Toast.LENGTH_SHORT).show();
+                    }
+                } else if (getString(R.string.delete_message).equals(selected)) {
+                    confirmDeleteMessage(message);
+                }
+            })
+            .show();
+    }
+
+    private void confirmDeleteMessage(Message message) {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.delete_message)
+            .setMessage(R.string.delete_message_confirm)
+            .setPositiveButton(R.string.delete_message, (dialog, which) -> {
+                if (message.getId() == null) return;
+                getApiService().deleteMessage(message.getId()).enqueue(new Callback<Map<String, Object>>() {
+                    @Override
+                    public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                        if (response.isSuccessful()) {
+                            Toast.makeText(ConversationActivity.this, R.string.delete_message_success, Toast.LENGTH_SHORT).show();
+                            if (adapter != null) {
+                                adapter.removeMessage(message.getId());
+                            }
+                            getPrefHelper().deleteMessagePlaintext(message.getId());
+                        } else {
+                            Toast.makeText(ConversationActivity.this, "Failed to delete message", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                        Toast.makeText(ConversationActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
     }
 
     private void confirmBlockUser() {
@@ -625,6 +877,9 @@ public class ConversationActivity extends BaseSecureActivity {
                         Message sentMsg = response.body().get("message");
                         if (sentMsg != null) {
                             sentMsg.setPlaintext(mediaPayload);
+                            if (sentMsg.getId() != null) {
+                                getPrefHelper().saveMessagePlaintext(sentMsg.getId(), mediaPayload);
+                            }
                             adapter.addMessage(sentMsg);
                             rvMessages.scrollToPosition(adapter.getItemCount() - 1);
                         }

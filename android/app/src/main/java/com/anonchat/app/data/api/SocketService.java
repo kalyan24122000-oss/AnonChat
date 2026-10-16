@@ -31,6 +31,9 @@ public class SocketService {
         void onMessageStatusUpdate(String messageId, String status);
         void onSubscriptionExpired();
         void onAccountSuspended();
+        default void onConversationCleared(String conversationId) {}
+        default void onConversationDeleted(String conversationId) {}
+        default void onMessageDeleted(String messageId, String conversationId) {}
     }
 
     private MessageListener messageListener;
@@ -147,6 +150,58 @@ public class SocketService {
                         messageListener.onAccountSuspended();
                     }
                 });
+            });
+
+            // Conversation cleared push
+            socket.on("conversation_cleared", args -> {
+                if (args.length > 0) {
+                    try {
+                        JSONObject obj = new JSONObject(args[0].toString());
+                        String convId = obj.optString("conversationId");
+                        mainHandler.post(() -> {
+                            if (messageListener != null) {
+                                messageListener.onConversationCleared(convId);
+                            }
+                        });
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error handling conversation_cleared", e);
+                    }
+                }
+            });
+
+            // Conversation deleted push
+            socket.on("conversation_deleted", args -> {
+                if (args.length > 0) {
+                    try {
+                        JSONObject obj = new JSONObject(args[0].toString());
+                        String convId = obj.optString("conversationId");
+                        mainHandler.post(() -> {
+                            if (messageListener != null) {
+                                messageListener.onConversationDeleted(convId);
+                            }
+                        });
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error handling conversation_deleted", e);
+                    }
+                }
+            });
+
+            // Message deleted push
+            socket.on("message_deleted", args -> {
+                if (args.length > 0) {
+                    try {
+                        JSONObject obj = new JSONObject(args[0].toString());
+                        String msgId = obj.optString("messageId");
+                        String convId = obj.optString("conversationId");
+                        mainHandler.post(() -> {
+                            if (messageListener != null) {
+                                messageListener.onMessageDeleted(msgId, convId);
+                            }
+                        });
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error handling message_deleted", e);
+                    }
+                }
             });
 
             socket.connect();

@@ -18,13 +18,23 @@ import java.util.List;
 public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapter.ViewHolder> {
     private final List<Conversation> conversations = new ArrayList<>();
     private final OnConversationClickListener listener;
+    private final OnConversationLongClickListener longClickListener;
 
     public interface OnConversationClickListener {
         void onConversationClick(Conversation conversation);
     }
 
+    public interface OnConversationLongClickListener {
+        void onConversationLongClick(Conversation conversation);
+    }
+
     public ConversationAdapter(OnConversationClickListener listener) {
+        this(listener, null);
+    }
+
+    public ConversationAdapter(OnConversationClickListener listener, OnConversationLongClickListener longClickListener) {
         this.listener = listener;
+        this.longClickListener = longClickListener;
     }
 
     public void setConversations(List<Conversation> list) {
@@ -33,6 +43,17 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
             conversations.addAll(list);
         }
         notifyDataSetChanged();
+    }
+
+    public void removeConversation(String conversationId) {
+        if (conversationId == null) return;
+        for (int i = 0; i < conversations.size(); i++) {
+            if (conversationId.equals(conversations.get(i).getId())) {
+                conversations.remove(i);
+                notifyItemRemoved(i);
+                break;
+            }
+        }
     }
 
     @NonNull
@@ -45,7 +66,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Conversation conv = conversations.get(position);
-        holder.bind(conv, listener);
+        holder.bind(conv, listener, longClickListener);
     }
 
     @Override
@@ -73,7 +94,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
             tvConvUnreadBadge = itemView.findViewById(R.id.tv_conv_unread_badge);
         }
 
-        public void bind(Conversation conv, OnConversationClickListener listener) {
+        public void bind(Conversation conv, OnConversationClickListener listener, OnConversationLongClickListener longClickListener) {
             String recipientId = conv.getRecipient() != null ? conv.getRecipient().getId() : "Unknown";
             String displayName = conv.getRecipient() != null && conv.getRecipient().getDisplayName() != null
                 ? conv.getRecipient().getDisplayName()
@@ -123,6 +144,14 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
                 if (listener != null) {
                     listener.onConversationClick(conv);
                 }
+            });
+
+            itemView.setOnLongClickListener(v -> {
+                if (longClickListener != null) {
+                    longClickListener.onConversationLongClick(conv);
+                    return true;
+                }
+                return false;
             });
         }
     }

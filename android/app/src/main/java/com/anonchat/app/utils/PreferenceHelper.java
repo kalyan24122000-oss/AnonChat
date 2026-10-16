@@ -30,19 +30,69 @@ public class PreferenceHelper {
         return prefs.getString(Constants.PREF_DISPLAY_NAME, null);
     }
 
-    public void saveKeys(String publicKeyBase64, String privateKeyBase64) {
-        prefs.edit()
-            .putString(Constants.PREF_PUBLIC_KEY, publicKeyBase64)
-            .putString(Constants.PREF_PRIVATE_KEY, privateKeyBase64)
-            .apply();
+    public void saveKeys(String userId, String publicKeyBase64, String privateKeyBase64) {
+        SharedPreferences.Editor editor = prefs.edit();
+        if (userId != null && !userId.isEmpty()) {
+            editor.putString(Constants.PREF_PUBLIC_KEY + "_" + userId, publicKeyBase64);
+            editor.putString(Constants.PREF_PRIVATE_KEY + "_" + userId, privateKeyBase64);
+        }
+        editor.putString(Constants.PREF_PUBLIC_KEY, publicKeyBase64);
+        editor.putString(Constants.PREF_PRIVATE_KEY, privateKeyBase64);
+        editor.apply();
     }
 
-    public String getPublicKey() {
+    public void saveKeys(String publicKeyBase64, String privateKeyBase64) {
+        saveKeys(getUserId(), publicKeyBase64, privateKeyBase64);
+    }
+
+    public String getPublicKey(String userId) {
+        if (userId != null && !userId.isEmpty()) {
+            String k = prefs.getString(Constants.PREF_PUBLIC_KEY + "_" + userId, null);
+            if (k != null) return k;
+        }
         return prefs.getString(Constants.PREF_PUBLIC_KEY, null);
     }
 
-    public String getPrivateKey() {
+    public String getPrivateKey(String userId) {
+        if (userId != null && !userId.isEmpty()) {
+            String k = prefs.getString(Constants.PREF_PRIVATE_KEY + "_" + userId, null);
+            if (k != null) return k;
+        }
         return prefs.getString(Constants.PREF_PRIVATE_KEY, null);
+    }
+
+    public String getPublicKey() {
+        return getPublicKey(getUserId());
+    }
+
+    public String getPrivateKey() {
+        return getPrivateKey(getUserId());
+    }
+
+    public void saveMessagePlaintext(String messageId, String plaintext) {
+        if (messageId == null || plaintext == null) return;
+        prefs.edit().putString("msg_plain_" + messageId, plaintext).apply();
+    }
+
+    public String getMessagePlaintext(String messageId) {
+        if (messageId == null) return null;
+        return prefs.getString("msg_plain_" + messageId, null);
+    }
+
+    public void deleteMessagePlaintext(String messageId) {
+        if (messageId == null) return;
+        prefs.edit().remove("msg_plain_" + messageId).apply();
+    }
+
+    public void deleteMessagesPlaintext(java.util.Collection<String> messageIds) {
+        if (messageIds == null || messageIds.isEmpty()) return;
+        SharedPreferences.Editor editor = prefs.edit();
+        for (String id : messageIds) {
+            if (id != null) {
+                editor.remove("msg_plain_" + id);
+            }
+        }
+        editor.apply();
     }
 
     public String getBaseUrl() {
@@ -86,6 +136,13 @@ public class PreferenceHelper {
     }
 
     public void clear() {
-        prefs.edit().clear().apply();
+        // Clear session credentials only, preserve private encryption keys and settings
+        prefs.edit()
+            .remove(Constants.PREF_TOKEN)
+            .remove(Constants.PREF_USER_ID)
+            .remove(Constants.PREF_DISPLAY_NAME)
+            .remove("pref_user_role")
+            .remove("pref_badge_color")
+            .apply();
     }
 }

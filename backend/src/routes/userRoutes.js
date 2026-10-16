@@ -39,6 +39,26 @@ router.put('/public-key', authenticateToken, (req, res, next) => {
   }
 });
 
+// Get public key of specific user
+router.get('/:id/public-key', authenticateToken, (req, res, next) => {
+  try {
+    const user = userService.getUserById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'USER_NOT_FOUND', message: 'User not found' });
+    }
+    res.json({
+      id: user.id,
+      displayName: user.display_name,
+      publicKey: user.public_key,
+      public_key: user.public_key,
+      badgeColor: user.badge_color,
+      status: user.status
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Search user by User ID
 router.get('/search', authenticateToken, (req, res, next) => {
   try {

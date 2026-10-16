@@ -85,7 +85,13 @@ public class RegisterActivity extends AppCompatActivity {
                 setLoading(false);
                 if (response.isSuccessful() && response.body() != null) {
                     AuthResponse auth = response.body();
-                    prefHelper.saveAuth(auth.getToken(), auth.getUser().getId(), auth.getUser().getDisplayName());
+                    String registeredUserId = auth.getUser().getId();
+                    prefHelper.saveAuth(auth.getToken(), registeredUserId, auth.getUser().getDisplayName());
+                    String pub = prefHelper.getPublicKey();
+                    String priv = prefHelper.getPrivateKey();
+                    if (pub != null && priv != null) {
+                        prefHelper.saveKeys(registeredUserId, pub, priv);
+                    }
                     if (auth.getUser() != null) {
                         if (auth.getUser().getRole() != null) {
                             prefHelper.setUserRole(auth.getUser().getRole());
